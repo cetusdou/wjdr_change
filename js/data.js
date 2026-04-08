@@ -199,23 +199,30 @@ class MatchResult {
     };
     
     // A可以给B的：A有>1张 且 B缺的
-    for (const { id } of userA.getExtraPuzzles()) {
+    // 每种拼图可以给对方 (count - 1) 张（自己留1张）
+    for (const { id, count } of userA.getExtraPuzzles()) {
       if (userB.want.includes(id)) {
-        match.aGive.push(id);
+        // 可以给对方 (count - 1) 张
+        for (let i = 0; i < count - 1; i++) {
+          match.aGive.push(id);
+        }
       }
     }
     
     // B可以给A的：B有>1张 且 A缺的
-    for (const { id } of userB.getExtraPuzzles()) {
+    for (const { id, count } of userB.getExtraPuzzles()) {
       if (userA.want.includes(id)) {
-        match.aGet.push(id);
+        // 可以给对方 (count - 1) 张
+        for (let i = 0; i < count - 1; i++) {
+          match.aGet.push(id);
+        }
       }
     }
     
     // 计算最大可交换数量
     const maxByPuzzle = Math.min(match.aGive.length, match.aGet.length);
     const maxByALimit = Math.min(match.aRemaining.send, match.aRemaining.recv);
-    const maxByBLimit = Math.min(match.bRemaining.send, bRemaining.recv);
+    const maxByBLimit = Math.min(match.bRemaining.send, match.bRemaining.recv);
     match.exchangeCount = Math.min(maxByPuzzle, maxByALimit, maxByBLimit);
     
     // 限制交换数量

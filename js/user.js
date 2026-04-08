@@ -291,8 +291,44 @@ class UIController {
   }
 
   // ==============================================
-  // 用户数据加载/保存
+  // 用户注册/加载/保存
   // ==============================================
+  
+  // 注册新用户
+  async registerUser(name) {
+    try {
+      // 检查昵称是否为空
+      if (!name || name.trim() === '') {
+        return { success: false, error: "请输入昵称" };
+      }
+      
+      // 检查昵称长度
+      if (name.length < 2 || name.length > 20) {
+        return { success: false, error: "昵称长度应为2-20个字符" };
+      }
+      
+      // 检查昵称格式（只允许字母、数字、中文、下划线）
+      if (!/^[\u4e00-\u9fa5a-zA-Z0-9_]+$/.test(name)) {
+        return { success: false, error: "昵称只能包含中文、字母、数字和下划线" };
+      }
+      
+      // 调用数据库注册
+      const newUser = await database.registerUser(name);
+      
+      // 设置当前用户
+      this.currentUser = newUser;
+      this.recorder = new PersonalRecorder(this.currentUser);
+      this.refreshAllDisplay();
+      
+      const userLabel = document.getElementById("currentUser");
+      if (userLabel) userLabel.innerText = `注册成功: ${name}（请设置库存）`;
+      
+      return { success: true, isNew: true, message: `用户 "${name}" 注册成功！` };
+    } catch (e) {
+      return { success: false, error: e.message };
+    }
+  }
+  
   async loadUser(name) {
     try {
       const userData = await database.loadUser(name);
@@ -307,15 +343,7 @@ class UIController {
         
         return { success: true, isNew: false };
       } else {
-        // 新用户
-        this.currentUser = new UserData(name);
-        this.recorder = new PersonalRecorder(this.currentUser);
-        this.refreshAllDisplay();
-        
-        const userLabel = document.getElementById("currentUser");
-        if (userLabel) userLabel.innerText = `新用户: ${name}（请设置库存后保存）`;
-        
-        return { success: true, isNew: true };
+        return { success: false, error: `用户 "${name}" 不存在，请先注册` };
       }
     } catch (e) {
       return { success: false, error: e.message };

@@ -12,18 +12,37 @@
   .section{margin-bottom:24px;padding:16px;background:#fafafa;border-radius:8px}
   .section-title{font-size:16px;font-weight:bold;color:#555;margin-bottom:12px;display:flex;align-items:center;gap:6px}
   
-  /* 限额显示 */
+  /* 日期显示 */
   .limit-bar{display:flex;gap:16px;margin-bottom:16px;padding:12px;background:#e3f2fd;border-radius:8px;flex-wrap:wrap}
   .limit-item{display:flex;align-items:center;gap:6px;font-size:14px}
   .limit-item span{font-weight:bold;color:#1976d2}
   
-  /* 拼图网格 */
-  .puzzle-grid{display:grid;grid-template-columns:repeat(12,1fr);gap:6px;margin-top:8px}
-  .puzzle-item{position:relative;padding:8px 4px;text-align:center;border:1px solid #ddd;border-radius:6px;cursor:pointer;font-size:12px;background:#fff;transition:all 0.2s}
-  .puzzle-item:hover{border-color:#2196f3;transform:scale(1.05)}
-  .puzzle-item.have{background:#c8e6c9;border-color:#4caf50}
-  .puzzle-item.want{background:#ffcdd2;border-color:#f44336}
-  .puzzle-count{position:absolute;top:-6px;right:-6px;background:#ff5722;color:white;font-size:10px;width:18px;height:18px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:bold}
+  /* 大类卡片 */
+  .category-card{border:1px solid #e0e0e0;border-radius:8px;margin-bottom:12px;background:#fff;overflow:hidden}
+  .category-header{padding:12px 16px;background:#f5f5f5;cursor:pointer;display:flex;align-items:center;gap:12px;transition:background 0.2s}
+  .category-header:hover{background:#eeeeee}
+  .expand-icon{color:#666;font-size:12px;transition:transform 0.2s}
+  .category-name{font-weight:bold;color:#333;flex:1}
+  .category-count{font-size:12px;color:#888}
+  
+  /* 小类容器 */
+  .puzzles-container{padding:8px 16px 16px;display:none}
+  .puzzle-row{display:flex;align-items:center;padding:8px 0;border-bottom:1px solid #f0f0f0;flex-wrap:wrap;gap:8px}
+  .puzzle-row:last-child{border-bottom:none}
+  .puzzle-name{font-size:14px;color:#555;min-width:140px;flex-shrink:0}
+  .pieces-container{display:flex;flex-wrap:wrap;gap:4px;flex:1}
+  
+  /* 碎片按钮 */
+  .piece-btn{width:32px;height:32px;border:1px solid #ddd;border-radius:4px;background:#fff;cursor:pointer;font-size:12px;transition:all 0.2s;display:flex;align-items:center;justify-content:center}
+  .piece-btn:hover{border-color:#2196f3;background:#e3f2fd}
+  
+  /* 拥有状态 */
+  .piece-btn.have-1{background:#c8e6c9;border-color:#4caf50;color:#2e7d32}
+  .piece-btn.have-2{background:#81c784;border-color:#4caf50;color:#fff}
+  .piece-btn.have-extra{background:#4caf50;border-color:#388e3c;color:#fff;font-weight:bold}
+  
+  /* 想要状态 */
+  .piece-btn.want{background:#ffcdd2;border-color:#f44336;color:#c62828}
   
   /* 按钮 */
   .btn{padding:10px 16px;background:#2196f3;color:white;border:none;border-radius:6px;cursor:pointer;font-size:14px;transition:all 0.2s;display:inline-flex;align-items:center;gap:6px}
@@ -32,14 +51,10 @@
   .btn-success:hover{background:#45a049}
   .btn-warning{background:#ff9800}
   .btn-warning:hover{background:#f57c00}
-  .btn-danger{background:#f44336}
-  .btn-danger:hover{background:#d32f2f}
-  .btn-secondary{background:#757575}
-  .btn-secondary:hover{background:#616161}
   
   /* 输入框 */
-  input,select{padding:10px 12px;border:1px solid #ddd;border-radius:6px;font-size:14px;outline:none}
-  input:focus,select:focus{border-color:#2196f3}
+  input{padding:10px 12px;border:1px solid #ddd;border-radius:6px;font-size:14px;outline:none}
+  input:focus{border-color:#2196f3}
   
   /* 匹配卡片 */
   .match-card{border:1px solid #e0e0e0;padding:16px;margin-bottom:12px;border-radius:8px;background:#fff;transition:all 0.2s}
@@ -65,13 +80,12 @@
   
   /* 手动交易 */
   .exchange-form{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-top:12px}
-  .exchange-col{padding:16px;background:#f5f5f5;border-radius:8px}
+  .exchange-col{padding:16px;background:#f5f5f5;border-radius:8px;max-height:500px;overflow-y:auto}
   .exchange-col h4{margin:0 0 12px 0;font-size:14px;color:#555}
-  .puzzle-select{max-height:300px;overflow-y:auto;display:flex;flex-wrap:wrap;gap:6px}
-  .select-item{padding:6px 12px;border:1px solid #ddd;border-radius:4px;cursor:pointer;font-size:12px;background:#fff;transition:all 0.2s}
+  .puzzle-select{display:flex;flex-direction:column;gap:8px}
+  .select-item{padding:6px 12px;border:1px solid #ddd;border-radius:4px;cursor:pointer;font-size:12px;background:#fff;transition:all 0.2s;display:inline-block}
   .select-item:hover{border-color:#2196f3}
   .select-item.selected{background:#2196f3;color:white;border-color:#2196f3}
-  .select-item.disabled{opacity:0.5;cursor:not-allowed;background:#f5f5f5}
   
   /* 标签页 */
   .tabs{display:flex;gap:4px;margin-bottom:16px;border-bottom:2px solid #e0e0e0;flex-wrap:wrap}
@@ -90,9 +104,9 @@
   
   /* 响应式 */
   @media (max-width: 768px) {
-    .puzzle-grid{grid-template-columns:repeat(8,1fr)}
     .exchange-form{grid-template-columns:1fr}
-    .limit-bar{flex-direction:column;gap:8px}
+    .puzzle-row{flex-direction:column;align-items:flex-start}
+    .puzzle-name{min-width:auto}
   }
 </style>
 </head>
@@ -101,13 +115,17 @@
 <div class="container">
   <h1>🧩 拼图交换小助手</h1>
   
-  <!-- 用户登录区 -->
+  <!-- 用户登录/注册区 -->
   <div class="section">
     <div style="display:flex;gap:12px;align-items:center;flex-wrap:wrap">
       <input type="text" id="nickname" placeholder="输入你的昵称" style="width:200px">
-      <button class="btn" onclick="handleLoadUser()">📂 加载我的数据</button>
-      <button class="btn btn-success" onclick="handleSaveUser()">💾 保存数据</button>
+      <button class="btn btn-success" onclick="handleRegister()">📝 注册</button>
+      <button class="btn" onclick="handleLoadUser()">📂 登录</button>
+      <button class="btn btn-warning" onclick="handleSaveUser()">💾 保存数据</button>
       <span id="currentUser" style="color:#666;font-size:14px"></span>
+    </div>
+    <div class="tip" style="margin-top:10px;margin-bottom:0">
+      💡 新用户请先点击"注册"创建账号，已有账号请点击"登录"
     </div>
   </div>
   
@@ -132,14 +150,21 @@
   <!-- 标签页内容: 我的库存 -->
   <div id="tab-inventory" class="tab-content active">
     <div class="section">
-      <div class="section-title">🟢 多余拼图（带数量，多余的可用于交换）</div>
-      <div class="tip">点击拼图增加数量（1→2→3...→9→0），数量≥2表示有多余可以交换</div>
-      <div class="puzzle-grid" id="haveGrid"></div>
+      <div class="section-title">🟢 我的拼图（点击展开大类，点击按钮标记数量）</div>
+      <div class="tip">
+        💡 点击大类展开查看小类，点击碎片按钮标记你的库存：
+        白色=没有，浅绿=有1张，中绿=有2张（可交换），深绿=有3张及以上。
+        数量循环：0→1→2→3→4→5→0
+      </div>
+      <div id="haveContainer"></div>
     </div>
     
     <div class="section">
-      <div class="section-title">🔴 缺少拼图（点击标记你需要的拼图）</div>
-      <div class="puzzle-grid" id="wantGrid"></div>
+      <div class="section-title">🔴 我想要的拼图（点击按钮标记你想要的）</div>
+      <div class="tip">
+        💡 点击碎片按钮标记你想要的拼图，方便系统为你匹配
+      </div>
+      <div id="wantContainer"></div>
     </div>
   </div>
   
@@ -223,9 +248,12 @@
   </div>
 </div>
 
-<!-- Firebase SDK -->
-<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js"></script>
-<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js"></script>
+<!-- Firebase SDK (Compat 版本) -->
+<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
+
+<!-- 配置文件 -->
+<script src="firebase-config.js"></script>
 
 <!-- 模块脚本 -->
 <script src="js/data.js"></script>
@@ -238,21 +266,48 @@
 // ==============================================
 // 页面初始化
 // ==============================================
-document.addEventListener('DOMContentLoaded', function() {
+document.addEventListener('DOMContentLoaded', async function() {
+  // 先初始化 Firebase
+  const dbInitialized = await database.ensureInitialized();
+  if (!dbInitialized) {
+    console.warn('Firebase 初始化失败，将在首次操作时重试');
+  }
+  
   // 初始化拼图配置
-  initPuzzleConfig();
+  const loaded = await loadPuzzleConfig();
   
-  // 初始化日期显示
-  document.getElementById("todayDate").innerText = getToday();
-  document.getElementById("totalPuzzleCount").innerText = CONFIG.TOTAL_PUZZLE;
-  
-  // 初始化UI
-  ui.init();
+  if (loaded) {
+    // 初始化日期显示
+    document.getElementById("todayDate").innerText = getToday();
+    document.getElementById("totalPuzzleCount").innerText = CONFIG.TOTAL_PUZZLE;
+    
+    // 初始化UI
+    await ui.init();
+  } else {
+    alert('拼图配置加载失败，请检查 puzzle.json 文件');
+  }
 });
 
 // ==============================================
 // 事件处理函数（暴露给HTML调用）
 // ==============================================
+
+async function handleRegister() {
+  const name = document.getElementById("nickname").value.trim();
+  if (!name) {
+    alert("请输入昵称");
+    return;
+  }
+  
+  const result = await ui.registerUser(name);
+  if (result.success) {
+    alert(result.message);
+    // 注册成功后更新昵称输入框
+    document.getElementById("nickname").value = name;
+  } else {
+    alert(result.error);
+  }
+}
 
 async function handleLoadUser() {
   const name = document.getElementById("nickname").value.trim();
@@ -298,27 +353,7 @@ async function handleExecuteManualRecord() {
 }
 
 function handleSwitchTab(tabName, element) {
-  // 更新标签样式
-  document.querySelectorAll(".tab").forEach(t => t.classList.remove("active"));
-  document.querySelectorAll(".tab-content").forEach(t => t.classList.remove("active"));
-  
-  element.classList.add("active");
-  document.getElementById(`tab-${tabName}`).classList.add("active");
-  
-  // 标签页特定逻辑
-  ui.currentTab = tabName;
-  
-  if (tabName === "members") {
-    database.getAllUsers().then(users => ui.renderMembersList(users));
-  } else if (tabName === "manual") {
-    ui.renderManualExchangeOptions();
-  } else if (tabName === "match") {
-    if (ui.currentUser) {
-      ui.loadMyMatches();
-    }
-  } else if (tabName === "allmatches") {
-    handleCalculateAllMatches();
-  }
+  ui.switchTab(tabName, element);
 }
 </script>
 </body>

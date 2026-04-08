@@ -1,6 +1,6 @@
 /**
  * 拼图配置 - 从 puzzle.json 加载
- * 12大类 × 9小类 × [9/12/15/18]个碎片
+ * 12大类 × 9小类，每类碎片数不同
  * 每个小类独立编号（从1开始）
  */
 
@@ -119,9 +119,12 @@ async function loadPuzzleConfig() {
     PUZZLE_DATA = await response.json();
     
     // 更新 CONFIG
-    CONFIG.CATEGORIES = PUZZLE_DATA.categories;
+    if (typeof CONFIG !== 'undefined') {
+      CONFIG.CATEGORIES = PUZZLE_DATA.categories;
+    }
     
-    console.log(`拼图配置加载完成：${PUZZLE_DATA.categories.length}大类 × 9小类 = ${getTotalPuzzleCount()}个碎片`);
+    const total = getTotalPuzzleCount();
+    console.log(`拼图配置加载完成：${PUZZLE_DATA.categories.length}大类 × 9小类 = ${total}个碎片`);
     
     return true;
   } catch (e) {
