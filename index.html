@@ -167,36 +167,44 @@
 
 <script>
 // ==============================================
-// 创建全局实例
+// 全局变量（将在初始化时创建）
 // ==============================================
-const matchCalculator = new MatchCalculator();
+let matchCalculator = null;
 
 // ==============================================
 // 页面初始化
 // ==============================================
 document.addEventListener('DOMContentLoaded', async function() {
-  // 先初始化 Firebase
-  const dbInitialized = await database.ensureInitialized();
-  if (!dbInitialized) {
-    console.warn('Firebase 初始化失败，将在首次操作时重试');
-  }
-  
-  // 初始化拼图配置
-  const loaded = await loadPuzzleConfig();
-  
-  if (loaded) {
-    // 初始化日期显示
-    document.getElementById("todayDate").innerText = getToday();
-    document.getElementById("totalPuzzleCount").innerText = CONFIG.TOTAL_PUZZLE;
+  try {
+    // 创建全局实例（确保所有依赖已加载）
+    matchCalculator = new MatchCalculator();
     
-    // 初始化UI
-    await ui.init();
+    // 先初始化 Firebase
+    const dbInitialized = await database.ensureInitialized();
+    if (!dbInitialized) {
+      console.warn('Firebase 初始化失败，将在首次操作时重试');
+    }
     
-    // 自动加载今天的匹配结果（如果有缓存）
-    // 这会从数据库读取缓存，如果没有则自动计算
-    await ui.loadMatchResult(false);
-  } else {
-    alert('拼图配置加载失败，请检查 puzzle.json 文件');
+    // 初始化拼图配置
+    const loaded = await loadPuzzleConfig();
+    
+    if (loaded) {
+      // 初始化日期显示
+      document.getElementById("todayDate").innerText = getToday();
+      document.getElementById("totalPuzzleCount").innerText = CONFIG.TOTAL_PUZZLE;
+      
+      // 初始化UI
+      await ui.init();
+      
+      // 自动加载今天的匹配结果（如果有缓存）
+      // 这会从数据库读取缓存，如果没有则自动计算
+      await ui.loadMatchResult(false);
+    } else {
+      alert('拼图配置加载失败，请检查 puzzle.json 文件');
+    }
+  } catch (e) {
+    console.error('页面初始化失败:', e);
+    alert('页面初始化失败: ' + e.message);
   }
 });
 
