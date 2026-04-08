@@ -1,0 +1,480 @@
+* {
+  box-sizing: border-box;
+  font-family: system-ui, -apple-system, sans-serif;
+}
+
+body {
+  margin: 0;
+  padding: 16px;
+  background: #f0f2f5;
+}
+
+.container {
+  max-width: 1200px;
+  margin: 0 auto;
+  background: white;
+  padding: 20px;
+  border-radius: 12px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+h1, h2, h3 {
+  color: #333;
+  margin-top: 0;
+}
+
+h1 {
+  font-size: 24px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.section {
+  margin-bottom: 24px;
+  padding: 16px;
+  background: #fafafa;
+  border-radius: 8px;
+}
+
+.section-title {
+  font-size: 16px;
+  font-weight: bold;
+  color: #555;
+  margin-bottom: 12px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+/* 日期显示 */
+.limit-bar {
+  display: flex;
+  gap: 16px;
+  margin-bottom: 16px;
+  padding: 12px;
+  background: #e3f2fd;
+  border-radius: 8px;
+  flex-wrap: wrap;
+}
+
+.limit-item {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 14px;
+}
+
+.limit-item span {
+  font-weight: bold;
+  color: #1976d2;
+}
+
+/* 大类卡片 */
+.category-card {
+  border: 1px solid #e0e0e0;
+  border-radius: 8px;
+  margin-bottom: 12px;
+  background: #fff;
+  overflow: hidden;
+}
+
+.category-header {
+  padding: 12px 16px;
+  background: #f5f5f5;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  transition: background 0.2s;
+}
+
+.category-header:hover {
+  background: #eeeeee;
+}
+
+.expand-icon {
+  color: #666;
+  font-size: 12px;
+  transition: transform 0.2s;
+}
+
+.category-name {
+  font-weight: bold;
+  color: #333;
+  flex: 1;
+}
+
+.category-count {
+  font-size: 12px;
+  color: #888;
+}
+
+/* 小类容器 */
+.puzzles-container {
+  padding: 8px 16px 16px;
+  display: none;
+}
+
+.puzzle-row {
+  display: flex;
+  align-items: center;
+  padding: 8px 0;
+  border-bottom: 1px solid #f0f0f0;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.puzzle-row:last-child {
+  border-bottom: none;
+}
+
+.puzzle-name {
+  font-size: 14px;
+  color: #555;
+  min-width: 140px;
+  flex-shrink: 0;
+}
+
+.pieces-container {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  flex: 1;
+}
+
+/* 碎片按钮 */
+.piece-btn {
+  width: 32px;
+  height: 32px;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  background: #fff;
+  cursor: pointer;
+  font-size: 12px;
+  transition: all 0.2s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.piece-btn:hover {
+  border-color: #2196f3;
+  background: #e3f2fd;
+}
+
+/* 拥有状态 - 每种数量不同颜色 */
+.piece-btn.have-1 {
+  background: #e2f0e2;
+  border-color: #81ca84;
+  color: #2e7d32;
+}
+
+.piece-btn.have-2 {
+  background: #c8e6c9;
+  border-color: #4caf50;
+  color: #2e7d32;
+}
+
+.piece-btn.have-3 {
+  background: #4caf50;
+  border-color: #388e3c;
+  color: #fff;
+  font-weight: bold;
+}
+
+/* 想要状态 */
+.piece-btn.want {
+  background: #ffcdd2;
+  border-color: #f44336;
+  color: #c62828;
+}
+
+/* 按钮 */
+.btn {
+  padding: 10px 16px;
+  background: #2196f3;
+  color: white;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 14px;
+  transition: all 0.2s;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.btn:hover {
+  background: #1976d2;
+  transform: translateY(-1px);
+}
+
+.btn-success {
+  background: #4caf50;
+}
+
+.btn-success:hover {
+  background: #45a049;
+}
+
+.btn-warning {
+  background: #ff9800;
+}
+
+.btn-warning:hover {
+  background: #f57c00;
+}
+
+/* 输入框 */
+input {
+  padding: 10px 12px;
+  border: 1px solid #ddd;
+  border-radius: 6px;
+  font-size: 14px;
+  outline: none;
+}
+
+input:focus {
+  border-color: #2196f3;
+}
+
+/* 匹配卡片 */
+.match-card {
+  border: 1px solid #e0e0e0;
+  padding: 16px;
+  margin-bottom: 12px;
+  border-radius: 8px;
+  background: #fff;
+  transition: all 0.2s;
+}
+
+.match-card:hover {
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+.match-optimal {
+  border-left: 4px solid #4caf50;
+  background: #f1f8e9;
+}
+
+.match-normal {
+  border-left: 4px solid #ffc107;
+  background: #fff8e1;
+}
+
+.match-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 12px;
+}
+
+.match-user {
+  font-weight: bold;
+  font-size: 16px;
+  color: #333;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.match-score {
+  background: #e3f2fd;
+  color: #1976d2;
+  padding: 4px 10px;
+  border-radius: 12px;
+  font-size: 12px;
+  font-weight: bold;
+}
+
+.match-detail {
+  font-size: 14px;
+  color: #666;
+  line-height: 1.8;
+}
+
+.match-detail strong {
+  color: #333;
+}
+
+.match-actions {
+  margin-top: 12px;
+  display: flex;
+  gap: 8px;
+}
+
+/* 成员列表 */
+.user-card {
+  border: 1px solid #e0e0e0;
+  padding: 12px;
+  margin-bottom: 8px;
+  border-radius: 8px;
+  background: #fff;
+}
+
+.user-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 8px;
+}
+
+.user-name {
+  font-weight: bold;
+  color: #333;
+}
+
+.user-stats {
+  font-size: 12px;
+  color: #888;
+}
+
+.puzzle-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  margin-top: 6px;
+}
+
+.tag {
+  font-size: 11px;
+  padding: 3px 8px;
+  border-radius: 4px;
+  background: #e0e0e0;
+  color: #555;
+}
+
+.tag-have {
+  background: #c8e6c9;
+  color: #2e7d32;
+}
+
+.tag-want {
+  background: #ffcdd2;
+  color: #c62828;
+}
+
+/* 手动交易 */
+.exchange-form {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+  margin-top: 12px;
+}
+
+.exchange-col {
+  padding: 16px;
+  background: #f5f5f5;
+  border-radius: 8px;
+  max-height: 500px;
+  overflow-y: auto;
+}
+
+.exchange-col h4 {
+  margin: 0 0 12px 0;
+  font-size: 14px;
+  color: #555;
+}
+
+.puzzle-select {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.select-item {
+  padding: 6px 12px;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 12px;
+  background: #fff;
+  transition: all 0.2s;
+  display: inline-block;
+}
+
+.select-item:hover {
+  border-color: #2196f3;
+}
+
+.select-item.selected {
+  background: #2196f3;
+  color: white;
+  border-color: #2196f3;
+}
+
+/* 标签页 */
+.tabs {
+  display: flex;
+  gap: 4px;
+  margin-bottom: 16px;
+  border-bottom: 2px solid #e0e0e0;
+  flex-wrap: wrap;
+}
+
+.tab {
+  padding: 10px 16px;
+  cursor: pointer;
+  border-bottom: 2px solid transparent;
+  margin-bottom: -2px;
+  font-size: 14px;
+  color: #666;
+  white-space: nowrap;
+}
+
+.tab:hover {
+  color: #2196f3;
+}
+
+.tab.active {
+  border-bottom-color: #2196f3;
+  color: #2196f3;
+  font-weight: bold;
+}
+
+.tab-content {
+  display: none;
+}
+
+.tab-content.active {
+  display: block;
+}
+
+/* 空状态 */
+.empty-state {
+  text-align: center;
+  padding: 40px;
+  color: #999;
+}
+
+.empty-state-icon {
+  font-size: 48px;
+  margin-bottom: 12px;
+}
+
+/* 提示 */
+.tip {
+  font-size: 12px;
+  color: #888;
+  margin-top: 8px;
+  margin-bottom: 12px;
+  padding: 10px;
+  background: #fff3e0;
+  border-radius: 4px;
+  border-left: 3px solid #ff9800;
+}
+
+/* 响应式 */
+@media (max-width: 768px) {
+  .exchange-form {
+    grid-template-columns: 1fr;
+  }
+  .puzzle-row {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+  .puzzle-name {
+    min-width: auto;
+  }
+}

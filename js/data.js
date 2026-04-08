@@ -11,6 +11,9 @@ const CONFIG = {
   DAILY_RECV_LIMIT: 3,    // 每日收到上限（仅用于匹配计算）
   CATEGORIES: [],         // 将在初始化时填充
   
+  // 管理员账号
+  ADMIN_NAME: '一只荔枝',
+  
   // 计算总拼图数
   get TOTAL_PUZZLE() {
     if (typeof getTotalPuzzleCount === 'function') {
@@ -87,10 +90,10 @@ class UserData {
     return CONFIG.DAILY_RECV_LIMIT - this.dailyLimit.received;
   }
 
-  // 获取多余拼图列表（数量>1的）
+  // 获取多余拼图列表（数量>0的，表示可送出的）
   getExtraPuzzles() {
     return Object.entries(this.have)
-      .filter(([_, count]) => count > 1)
+      .filter(([_, count]) => count > 0)
       .map(([id, count]) => ({ id: id, count }));
   }
 
@@ -167,7 +170,204 @@ class UserData {
 }
 
 // ==============================================
-// 匹配结果类
+// 全局匹配结果类（统筹分配）
+// ==============================================
+class GlobalMatchResult {
+  constructor() {
+    this.matches = [];      // 所有匹配对 [MatchPair]
+    this.calculateTime = new Date();
+  }
+
+  // 添加一个匹配对
+  addMatch(matchPair) {
+    this.matches.push(matchPair);
+  }
+
+  // 获取与指定用户相关的匹配（按对方分组）
+  getMatchesForUser(userName) {
+    const userMatches = this.matches.filter(m => m.sender === userName || m.receiver === userName);
+    
+    // 按对方分组
+    const grouped = {};
+    for (const match of userMatches) {
+      const partner = match.sender === userName ? match.receiver : match.sender;
+      if (!grouped[partner]) {
+        grouped[partner] = {
+          partner: partner,
+          iGive: [],
+          iGet: []
+        };
+      }
+      
+      if (match.sender === userName) {
+        // 我给对方
+        grouped[partner].iGive.push(match.puzzleId);
+      } else {
+        // 我从对方得到
+        grouped[partner].iGet.push(match.puzzleId);
+      }
+    }
+    
+    return Object.values(grouped);
+  }
+
+  // 获取匹配数量
+  getMatchCount() {
+    return this.matches.length;
+  }
+}
+
+// ==============================================
+// 匹配对类（单向：sender给receiver一张拼图）
+// ==============================================
+class MatchPair {
+  constructor(sender, receiver, puzzleId) {
+    this.sender = sender;       // 送出者
+    this.receiver = receiver;   // 接收者
+    this.puzzleId = puzzleId;   // 拼图ID
+  }
+}
+
+// ==============================================
+// 全局匹配计算器（统筹分配，防止重复）
+// ==============================================
+class GlobalMatchCalculator {
+  constructor() {
+    this.result = null;
+  }
+
+  /**
+   * 计算全局最优匹配
+   * 核心约束：
+   * 1. 同一张拼图（来自同一个sender的同一个puzzleId）只能送给一个人
+   * 2. 同一个人（receiver）不能从多人收到同一张拼图（同一个puzzleId）
+   * 3. 受每日送出/收到限额限制
+   * 
+   * 算法思路：
+   * - 构建"供应"列表：谁有什么拼图可以送出多少张
+   * - 构建"需求"列表：谁想要什么拼图
+   * - 贪心匹配：优先匹配供需平衡的
+   */
+  calculate(users) {
+    const result = new GlobalMatchResult();
+    
+    if (users.length < 2) {
+      return result;
+    }
+
+    // 转换为UserData对象
+    const userObjects = users.map(u => {
+      if (u instanceof UserData) return u;
+      return UserData.fromObject(u);
+    });
+
+    // 追踪每个用户的剩余送出/收到限额
+    const userLimits = {};
+    for (const user of userObjects) {
+      userLimits[user.name] = {
+        remainingSend: user.getRemainingSend(),
+        remainingRecv: user.getRemainingRecv()
+      };
+    }
+
+    // 追踪每张拼图已经被分配了多少张（从某个sender送出的数量）
+    // puzzleAllocations[senderName][puzzleId] = 已分配数量
+    const puzzleAllocations = {};
+    for (const user of userObjects) {
+      puzzleAllocations[user.name] = {};
+      for (const { id, count } of user.getExtraPuzzles()) {
+        puzzleAllocations[user.name][id] = 0; // 已分配0张
+      }
+    }
+
+    // 追踪每个receiver已经收到了哪些拼图（防止重复收到同一张）
+    // receiverPuzzles[receiverName][puzzleId] = true
+    const receiverPuzzles = {};
+    for (const user of userObjects) {
+      receiverPuzzles[user.name] = {};
+    }
+
+    // 构建所有可能的匹配（供需对）
+    // 格式: { sender, receiver, puzzleId, priority }
+    const possibleMatches = [];
+    
+    for (const sender of userObjects) {
+      const extraPuzzles = sender.getExtraPuzzles();
+      
+      for (const { id: puzzleId, count } of extraPuzzles) {
+        // 找到所有想要这个拼图的人
+        for (const receiver of userObjects) {
+          if (sender.name === receiver.name) continue; // 不能送给自己
+          
+          if (receiver.want.includes(puzzleId)) {
+            // 计算优先级：双方限额充足程度
+            const senderLimit = userLimits[sender.name].remainingSend;
+            const receiverLimit = userLimits[receiver.name].remainingRecv;
+            
+            // 优先级 = 双方剩余限额之和（越大越优先）
+            const priority = senderLimit + receiverLimit;
+            
+            possibleMatches.push({
+              sender: sender.name,
+              receiver: receiver.name,
+              puzzleId: puzzleId,
+              priority: priority,
+              senderLimit: senderLimit,
+              receiverLimit: receiverLimit
+            });
+          }
+        }
+      }
+    }
+
+    // 按优先级降序排序
+    possibleMatches.sort((a, b) => b.priority - a.priority);
+
+    // 贪心匹配
+    for (const match of possibleMatches) {
+      const { sender, receiver, puzzleId } = match;
+      
+      // 检查sender是否还有送出限额
+      if (userLimits[sender].remainingSend <= 0) continue;
+      
+      // 检查receiver是否还有收到限额
+      if (userLimits[receiver].remainingRecv <= 0) continue;
+      
+      // 检查sender的这张拼图是否还有剩余可送
+      const senderObj = userObjects.find(u => u.name === sender);
+      const senderHaveCount = senderObj.have[puzzleId] || 0;
+      const senderAllocated = puzzleAllocations[sender][puzzleId] || 0;
+      if (senderAllocated >= senderHaveCount) continue;
+      
+      // 检查receiver是否已经收到过这张拼图
+      if (receiverPuzzles[receiver][puzzleId]) continue;
+      
+      // 执行匹配
+      result.addMatch(new MatchPair(sender, receiver, puzzleId));
+      
+      // 更新限额
+      userLimits[sender].remainingSend--;
+      userLimits[receiver].remainingRecv--;
+      
+      // 更新拼图分配记录
+      puzzleAllocations[sender][puzzleId] = (puzzleAllocations[sender][puzzleId] || 0) + 1;
+      
+      // 更新receiver已收到的拼图记录
+      receiverPuzzles[receiver][puzzleId] = true;
+    }
+
+    this.result = result;
+    return result;
+  }
+
+  // 获取计算结果
+  getResult() {
+    return this.result;
+  }
+}
+
+// ==============================================
+// 旧的匹配结果类（保留用于兼容性）
 // ==============================================
 class MatchResult {
   constructor(userA, userB) {
@@ -180,7 +380,7 @@ class MatchResult {
     this.bRemaining = { send: 0, recv: 0 };
   }
 
-  // 从两个用户数据计算匹配
+  // 从两个用户数据计算匹配（旧方法，现在只用于显示）
   static calculate(userA, userB) {
     const match = new MatchResult(userA.name, userB.name);
     
@@ -198,36 +398,40 @@ class MatchResult {
       recv: CONFIG.DAILY_RECV_LIMIT - userB.dailyLimit.received
     };
     
-    // A可以给B的：A有>1张 且 B缺的
-    // 每种拼图可以给对方 (count - 1) 张（自己留1张）
+    // A可以给B的：A有多余的 且 B想要的
     for (const { id, count } of userA.getExtraPuzzles()) {
       if (userB.want.includes(id)) {
-        // 可以给对方 (count - 1) 张
-        for (let i = 0; i < count - 1; i++) {
+        for (let i = 0; i < count; i++) {
           match.aGive.push(id);
         }
       }
     }
     
-    // B可以给A的：B有>1张 且 A缺的
+    // B可以给A的：B有多余的 且 A想要的
     for (const { id, count } of userB.getExtraPuzzles()) {
       if (userA.want.includes(id)) {
-        // 可以给对方 (count - 1) 张
-        for (let i = 0; i < count - 1; i++) {
+        for (let i = 0; i < count; i++) {
           match.aGet.push(id);
         }
       }
     }
     
-    // 计算最大可交换数量
-    const maxByPuzzle = Math.min(match.aGive.length, match.aGet.length);
-    const maxByALimit = Math.min(match.aRemaining.send, match.aRemaining.recv);
-    const maxByBLimit = Math.min(match.bRemaining.send, match.bRemaining.recv);
-    match.exchangeCount = Math.min(maxByPuzzle, maxByALimit, maxByBLimit);
+    // 计算单向交换数量
+    const aGiveCount = Math.min(
+      match.aGive.length,
+      match.aRemaining.send,
+      match.bRemaining.recv
+    );
     
-    // 限制交换数量
-    match.aGive = match.aGive.slice(0, match.exchangeCount);
-    match.aGet = match.aGet.slice(0, match.exchangeCount);
+    const bGiveCount = Math.min(
+      match.aGet.length,
+      match.bRemaining.send,
+      match.aRemaining.recv
+    );
+    
+    match.exchangeCount = aGiveCount + bGiveCount;
+    match.aGive = match.aGive.slice(0, aGiveCount);
+    match.aGet = match.aGet.slice(0, bGiveCount);
     
     return match;
   }
@@ -258,7 +462,21 @@ function getToday() {
   return new Date().toISOString().split('T')[0];
 }
 
+// 检查是否为管理员
+function isAdmin(userName) {
+  return userName === CONFIG.ADMIN_NAME;
+}
+
 // 导出模块
 if (typeof module !== 'undefined' && module.exports) {
-  module.exports = { CONFIG, UserData, MatchResult, getToday };
+  module.exports = { 
+    CONFIG, 
+    UserData, 
+    MatchResult, 
+    GlobalMatchResult,
+    GlobalMatchCalculator,
+    MatchPair,
+    getToday,
+    isAdmin
+  };
 }

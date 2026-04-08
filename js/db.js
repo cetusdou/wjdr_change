@@ -208,6 +208,69 @@ class Database {
       });
     });
   }
+
+  // ==============================================
+  // 匹配结果缓存操作
+  // ==============================================
+
+  // 保存匹配结果到数据库
+  async saveMatchResult(matchResult) {
+    await this.checkConfig();
+    
+    const data = {
+      date: getToday(),
+      calculateTime: new Date().toISOString(),
+      matchCount: matchResult.getMatchCount(),
+      matches: matchResult.matches.map(m => ({
+        sender: m.sender,
+        receiver: m.receiver,
+        puzzleId: m.puzzleId
+      }))
+    };
+    
+    await this.db.collection("system").doc("matchResult").set(data);
+    return true;
+  }
+
+  // 从数据库加载匹配结果
+  async loadMatchResult() {
+    await this.checkConfig();
+    
+    const doc = await this.db.collection("system").doc("matchResult").get();
+    if (!doc.exists) {
+      return null;
+    }
+    
+    const data = doc.data();
+    
+    // 检查是否是今天的数据
+    if (data.date !== getToday()) {
+      return null; // 过期数据
+    }
+    
+    // 重建 GlobalMatchResult 对象
+    const result = new GlobalMatchResult();
+    result.calculateTime = new Date(data.calculateTime);
+    
+    for (const m of data.matches) {
+      result.addMatch(new MatchPair(m.sender, m.receiver, m.puzzleId));
+    }
+    
+    return result;
+  }
+
+  // 检查是否需要重新计算（今天是否已计算过）
+  async shouldRecalculate() {
+    await this.checkConfig();
+    
+    const doc = await this.db.collection("system").doc("matchResult").get();
+    if (!doc.exists) {
+      return true; // 从未计算过
+    }
+    
+    const data = doc.data();
+    return data.date !== getToday(); // 如果不是今天的数据，需要重新计算
+  }
 }
 
 // 创建全局数据库实例

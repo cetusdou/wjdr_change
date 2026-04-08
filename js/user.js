@@ -145,11 +145,11 @@ class UIController {
     const puzzleId = btn.dataset.puzzleId;
     const current = this.currentUser.have[puzzleId] || 0;
     
-    // 循环：0→1→2→3→4→5→0
+    // 循环：0→1→2→3→0
     let newCount;
     if (current === 0) {
       newCount = 1;
-    } else if (current < 5) {
+    } else if (current < 3) {
       newCount = current + 1;
     } else {
       newCount = 0;
@@ -186,17 +186,17 @@ class UIController {
   
   // 更新碎片按钮显示状态
   updatePieceBtnDisplay(btn, count) {
-    btn.classList.remove('have-1', 'have-2', 'have-extra');
+    btn.classList.remove('have-1', 'have-2', 'have-3');
     
     if (count === 1) {
       btn.classList.add('have-1');
-      btn.title = '拥有 1 张';
+      btn.title = '多余 1 张（可交换）';
     } else if (count === 2) {
       btn.classList.add('have-2');
-      btn.title = '拥有 2 张（可交换）';
-    } else if (count > 2) {
-      btn.classList.add('have-extra');
-      btn.title = `拥有 ${count} 张`;
+      btn.title = '多余 2 张（可交换）';
+    } else if (count === 3) {
+      btn.classList.add('have-3');
+      btn.title = '多余 3 张（可交换）';
     } else {
       btn.title = '';
     }
@@ -235,8 +235,10 @@ class UIController {
         const puzzleId = generatePuzzleId(parseInt(categoryId), pi + 1, pieceNum);
         const haveCount_for_id = this.currentUser.have[puzzleId] || 0;
         
-        if (haveCount_for_id > 0) haveCount++;
-        if (haveCount_for_id > 1) extraCount++;
+        if (haveCount_for_id > 0) {
+          haveCount++;
+          extraCount++;  // count > 0 即为可交换
+        }
         if (this.currentUser.want.includes(puzzleId)) wantCount++;
       }
     }
@@ -337,6 +339,7 @@ class UIController {
         this.currentUser = userData;
         this.recorder = new PersonalRecorder(this.currentUser);
         this.refreshAllDisplay();
+        this.updateAdminUI();
         
         const userLabel = document.getElementById("currentUser");
         if (userLabel) userLabel.innerText = `当前用户: ${name}`;
@@ -347,6 +350,43 @@ class UIController {
       }
     } catch (e) {
       return { success: false, error: e.message };
+    }
+  }
+  
+  // 更新管理员UI（显示/隐藏重新计算按钮）
+  updateAdminUI() {
+    const recalculateBtn = document.getElementById("recalculateBtn");
+    const adminOnlyTip = document.getElementById("adminOnlyTip");
+    
+    if (this.currentUser && isAdmin(this.currentUser.name)) {
+      // 管理员：显示按钮
+      if (recalculateBtn) recalculateBtn.style.display = 'inline-flex';
+      if (adminOnlyTip) adminOnlyTip.style.display = 'none';
+    } else {
+      // 普通用户：隐藏按钮，显示提示
+      if (recalculateBtn) recalculateBtn.style.display = 'none';
+      if (adminOnlyTip) adminOnlyTip.style.display = 'inline';
+    }
+  }
+  
+  // 更新最后计算时间显示
+  updateLastCalculateTime() {
+    const timeEl = document.getElementById("lastCalculateTime");
+    if (!timeEl) return;
+    
+    const result = matchCalculator.getResult();
+    if (result && result.calculateTime) {
+      const time = new Date(result.calculateTime);
+      const timeStr = time.toLocaleString('zh-CN', {
+        month: 'short',
+        day: 'numeric',
+        hour: '2-digit',
+        minute: '2-digit'
+      });
+      timeEl.innerText = `最后更新: ${timeStr}`;
+      timeEl.style.display = 'block';
+    } else {
+      timeEl.style.display = 'none';
     }
   }
 
@@ -366,26 +406,49 @@ class UIController {
   // ==============================================
   // 匹配相关
   // ==============================================
-  async calculateAllMatches() {
+  
+  /**
+   * 加载匹配结果（自动处理缓存和计算）
+   * 普通用户：从缓存/数据库读取今天的匹配结果
+   * 管理员：可以强制重新计算
+   */
+  async loadMatchResult(forceRecalculate = false) {
     try {
-      this.allUsers = await database.getAllUsers();
-      const matches = matchCalculator.calculateAllMatches(this.allUsers);
+      // 如果是强制重新计算，检查管理员权限
+      if (forceRecalculate) {
+        if (!this.currentUser || !isAdmin(this.currentUser.name)) {
+          return { success: false, error: "只有管理员可以重新计算全局匹配" };
+        }
+      }
+      
+      // 获取匹配结果（会自动处理缓存逻辑）
+      const result = await matchCalculator.getMatchResult(forceRecalculate);
       
       // 更新全局匹配显示
       const totalEl = document.getElementById("totalMatchPairs");
-      if (totalEl) totalEl.innerText = matches.length;
+      if (totalEl) totalEl.innerText = result.getMatchCount();
       
-      this.renderAllMatches(matches);
+      this.renderAllMatches(result);
+      
+      // 更新最后计算时间
+      this.updateLastCalculateTime();
       
       // 如果当前有用户，同时刷新个人匹配
       if (this.currentUser) {
         this.loadMyMatches();
       }
       
-      return { success: true, count: matches.length };
+      return { success: true, count: result.getMatchCount() };
     } catch (e) {
       return { success: false, error: e.message };
     }
+  }
+  
+  /**
+   * 管理员手动重新计算（供按钮调用）
+   */
+  async calculateAllMatches() {
+    return await this.loadMatchResult(true);
   }
 
   loadMyMatches() {
@@ -395,10 +458,7 @@ class UIController {
     }
 
     const myMatches = matchCalculator.getMatchesForUser(this.currentUser.name);
-    
-    // 转换为个人视角
-    const formattedMatches = myMatches.map(m => m.getPerspective(this.currentUser.name));
-    this.renderMatches(formattedMatches);
+    this.renderMatches(myMatches);
   }
 
   // ==============================================
@@ -424,33 +484,27 @@ class UIController {
     el.innerHTML = matches.map(m => {
       const givePuzzles = m.iGive.map(id => this.getPuzzleDisplayName(id)).join(", ");
       const getPuzzles = m.iGet.map(id => this.getPuzzleDisplayName(id)).join(", ");
+      const exchangeCount = m.iGive.length + m.iGet.length;
       
       return `
-      <div class="match-card ${m.exchangeCount >= 3 ? 'match-optimal' : 'match-normal'}">
+      <div class="match-card ${exchangeCount >= 3 ? 'match-optimal' : 'match-normal'}">
         <div class="match-header">
           <div class="match-user">👤 ${m.partner}</div>
-          <div class="match-score">可交换 ${m.exchangeCount} 张</div>
+          <div class="match-score">可交换 ${exchangeCount} 张</div>
         </div>
         <div class="match-detail">
-          <div>📤 你给他: <strong>${givePuzzles}</strong> (${m.iGive.length}张)</div>
-          <div>📥 你得到: <strong>${getPuzzles}</strong> (${m.iGet.length}张)</div>
-          <div style="margin-top:8px;font-size:12px;color:#888">
-            限额情况: 你(送${m.myRemaining.send}/收${m.myRemaining.recv}) · 
-            对方(送${m.partnerRemaining.send}/收${m.partnerRemaining.recv})
-          </div>
-        </div>
-        <div class="match-actions">
-          <button class="btn btn-success" onclick="ui.executeMatchExchange('${m.partner}', [${m.iGive.map(id => `'${id}'`).join(',')}], [${m.iGet.map(id => `'${id}'`).join(',')}])">
-            ✅ 执行交换
-          </button>
+          ${m.iGive.length > 0 ? `<div>� 你给 ${m.partner}: <strong>${givePuzzles}</strong> (${m.iGive.length}张)</div>` : ''}
+          ${m.iGet.length > 0 ? `<div>📥 你从 ${m.partner} 得: <strong>${getPuzzles}</strong> (${m.iGet.length}张)</div>` : ''}
         </div>
       </div>
     `}).join("");
   }
 
-  renderAllMatches(matches) {
+  renderAllMatches(result) {
     const el = document.getElementById("allMatchesResult");
     if (!el) return;
+
+    const matches = result.matches || [];
 
     if (matches.length === 0) {
       el.innerHTML = `
@@ -465,23 +519,39 @@ class UIController {
       return;
     }
 
-    el.innerHTML = matches.map(m => {
-      const aGivePuzzles = m.aGive.map(id => this.getPuzzleDisplayName(id)).join(", ");
-      const aGetPuzzles = m.aGet.map(id => this.getPuzzleDisplayName(id)).join(", ");
+    // 按配对分组显示
+    const pairs = {};
+    for (const match of matches) {
+      const key = [match.sender, match.receiver].sort().join('⇄');
+      if (!pairs[key]) {
+        pairs[key] = {
+          userA: match.sender,
+          userB: match.receiver,
+          aGive: [],
+          bGive: []
+        };
+      }
+      if (match.sender === pairs[key].userA) {
+        pairs[key].aGive.push(match.puzzleId);
+      } else {
+        pairs[key].bGive.push(match.puzzleId);
+      }
+    }
+
+    el.innerHTML = Object.values(pairs).map(m => {
+      const aGivePuzzles = m.aGive.map(id => this.getPuzzleDisplayName(id)).join(", ") || '无';
+      const bGivePuzzles = m.bGive.map(id => this.getPuzzleDisplayName(id)).join(", ") || '无';
+      const exchangeCount = m.aGive.length + m.bGive.length;
       
       return `
-      <div class="match-card ${m.exchangeCount >= 3 ? 'match-optimal' : 'match-normal'}">
+      <div class="match-card ${exchangeCount >= 3 ? 'match-optimal' : 'match-normal'}">
         <div class="match-header">
           <div class="match-user">👤 ${m.userA} ⇄ 👤 ${m.userB}</div>
-          <div class="match-score">可交换 ${m.exchangeCount} 张</div>
+          <div class="match-score">可交换 ${exchangeCount} 张</div>
         </div>
         <div class="match-detail">
-          <div>📤 ${m.userA} 给 ${m.userB}: <strong>${aGivePuzzles}</strong></div>
-          <div>📥 ${m.userA} 从 ${m.userB} 得: <strong>${aGetPuzzles}</strong></div>
-          <div style="margin-top:8px;font-size:12px;color:#888">
-            ${m.userA}: 送${m.aRemaining.send}/收${m.aRemaining.recv} · 
-            ${m.userB}: 送${m.bRemaining.send}/收${m.bRemaining.recv}
-          </div>
+          <div>📤 ${m.userA} 给 ${m.userB}: <strong>${aGivePuzzles}</strong> (${m.aGive.length}张)</div>
+          <div>� ${m.userB} 给 ${m.userA}: <strong>${bGivePuzzles}</strong> (${m.bGive.length}张)</div>
         </div>
       </div>
     `}).join("");
@@ -509,7 +579,7 @@ class UIController {
 
     el.innerHTML = users.map(u => {
       const extraPuzzles = Object.entries(u.have || {})
-        .filter(([_, c]) => c > 1)
+        .filter(([_, c]) => c > 0)
         .map(([id, c]) => ({ id: id, count: c }));
       const wantList = u.want || [];
 
@@ -634,12 +704,12 @@ class UIController {
         const itemsDiv = document.createElement("div");
         itemsDiv.style.cssText = "display:flex;flex-wrap:wrap;gap:4px;padding-left:8px;";
         
-        for (const puzzle of subPuzzles) {
+        for (const p of subPuzzles) {
           const div = document.createElement("div");
           div.className = "select-item";
-          div.innerText = `${puzzle.pieceNum}(${puzzle.count})`;
-          div.dataset.id = puzzle.id;
-          div.onclick = () => this.toggleManualSend(div, puzzle.id);
+          div.innerText = `${p.pieceNum}(${p.count})`;
+          div.dataset.id = p.id;
+          div.onclick = () => this.toggleManualSend(div, p.id);
           itemsDiv.appendChild(div);
         }
         

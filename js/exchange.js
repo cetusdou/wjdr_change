@@ -4,53 +4,112 @@
  */
 
 // ==============================================
-// 全局匹配计算器
+// 全局匹配计算器（使用新的统筹分配算法）
 // ==============================================
 class MatchCalculator {
   constructor() {
-    this.allMatches = []; // 缓存的匹配结果
+    this.globalCalculator = new GlobalMatchCalculator();
     this.lastCalculateTime = null;
+    this.cachedResult = null;
   }
 
-  // 计算所有用户间的匹配
-  calculateAllMatches(users) {
-    this.allMatches = [];
-    
-    if (users.length < 2) {
-      return [];
+  /**
+   * 获取匹配结果（优先从缓存/数据库读取）
+   * 如果今天还没有计算过，会自动计算并保存
+   */
+  async getMatchResult(forceRecalculate = false) {
+    // 如果强制重新计算，或者是管理员手动触发
+    if (forceRecalculate) {
+      return await this.calculateAndSave();
     }
-
-    // 双重循环计算所有配对
-    for (let i = 0; i < users.length; i++) {
-      for (let j = i + 1; j < users.length; j++) {
-        const match = MatchResult.calculate(users[i], users[j]);
-        if (match.isValid()) {
-          this.allMatches.push(match);
+    
+    // 先尝试从内存缓存读取
+    if (this.cachedResult && this.isTodayResult(this.cachedResult)) {
+      return this.cachedResult;
+    }
+    
+    // 再尝试从数据库读取
+    if (database.loadMatchResult) {
+      try {
+        const dbResult = await database.loadMatchResult();
+        if (dbResult) {
+          this.cachedResult = dbResult;
+          this.lastCalculateTime = dbResult.calculateTime;
+          return dbResult;
         }
+      } catch (e) {
+        console.warn("从数据库加载匹配结果失败:", e);
       }
     }
+    
+    // 数据库中没有今天的数据，需要重新计算
+    return await this.calculateAndSave();
+  }
 
-    // 按交换数量降序排序
-    this.allMatches.sort((a, b) => b.exchangeCount - a.exchangeCount);
+  /**
+   * 计算并保存匹配结果
+   */
+  async calculateAndSave() {
+    // 确保 database 已定义
+    if (typeof database === 'undefined' || !database) {
+      throw new Error("数据库未初始化");
+    }
+    
+    const users = await database.getAllUsers();
+    const result = this.globalCalculator.calculate(users);
+    
+    // 保存到数据库
+    if (database.saveMatchResult) {
+      await database.saveMatchResult(result);
+    } else {
+      console.warn("database.saveMatchResult 不可用，匹配结果仅缓存在内存中");
+    }
+    
+    // 更新缓存
+    this.cachedResult = result;
     this.lastCalculateTime = new Date();
     
-    return this.allMatches;
+    return result;
+  }
+
+  /**
+   * 检查缓存结果是否是今天的
+   */
+  isTodayResult(result) {
+    if (!result || !result.calculateTime) return false;
+    const resultDate = new Date(result.calculateTime).toISOString().split('T')[0];
+    return resultDate === getToday();
+  }
+
+  /**
+   * 手动触发重新计算（仅管理员可用）
+   */
+  async recalculate() {
+    return await this.calculateAndSave();
   }
 
   // 获取与指定用户相关的匹配
   getMatchesForUser(userName) {
-    return this.allMatches.filter(m => m.userA === userName || m.userB === userName);
+    if (!this.cachedResult) return [];
+    return this.cachedResult.getMatchesForUser(userName);
   }
 
   // 获取匹配数量
   getMatchCount() {
-    return this.allMatches.length;
+    if (!this.cachedResult) return 0;
+    return this.cachedResult.getMatchCount();
   }
 
   // 清除缓存
   clearCache() {
-    this.allMatches = [];
+    this.globalCalculator = new GlobalMatchCalculator();
     this.lastCalculateTime = null;
+    this.cachedResult = null;
+  }
+
+  // 获取原始结果
+  getResult() {
+    return this.cachedResult;
   }
 }
 
@@ -158,136 +217,9 @@ class PersonalRecorder {
       failed: puzzleIds.filter(id => !successful.includes(id))
     };
   }
-
-  // 撤销收到记录
-  undoReceive(puzzleId) {
-    const removeResult = this.user.removePuzzle(puzzleId);
-    if (!removeResult.success) {
-      return removeResult;
-    }
-
-    // 如果数量变少了，加回限额（可选，取决于业务逻辑）
-    // 这里暂时不减限额，因为撤销通常需要管理员权限
-
-    return {
-      success: true,
-      puzzleId: puzzleId,
-      message: "已撤销收到记录（限额未恢复）"
-    };
-  }
-
-  // 撤销送出记录
-  undoSend(puzzleId) {
-    this.user.addPuzzle(puzzleId);
-
-    return {
-      success: true,
-      puzzleId: puzzleId,
-      message: "已撤销送出记录（限额未恢复）"
-    };
-  }
 }
-
-// ==============================================
-// 双人交换执行器（可选，用于系统推荐的一键交换）
-// ==============================================
-class ExchangeExecutor {
-  constructor(db) {
-    this.db = db;
-  }
-
-  // 执行双向交换
-  async executeTwoWayExchange(userAName, userBName, aGive, aGet) {
-    // 加载双方数据
-    const [userA, userB] = await Promise.all([
-      this.db.loadUser(userAName),
-      this.db.loadUser(userBName)
-    ]);
-
-    if (!userA || !userB) {
-      throw new Error("用户数据不存在");
-    }
-
-    // 验证交换可行性
-    const validation = this.validateExchange(userA, userB, aGive, aGet);
-    if (!validation.valid) {
-      throw new Error(validation.error);
-    }
-
-    // 执行数据更新
-    // A送出给B
-    for (const id of aGive) {
-      userA.removePuzzle(id);
-      userB.addPuzzle(id);
-    }
-
-    // B送出给A
-    for (const id of aGet) {
-      userB.removePuzzle(id);
-      userA.addPuzzle(id);
-    }
-
-    // 更新限额
-    userA.recordSent(aGive.length);
-    userA.recordReceived(aGet.length);
-    userB.recordSent(aGet.length);
-    userB.recordReceived(aGive.length);
-
-    // 保存到数据库
-    await this.db.saveUsers([userA, userB]);
-
-    return {
-      success: true,
-      userA: userA.toObject(),
-      userB: userB.toObject()
-    };
-  }
-
-  // 验证交换是否可行
-  validateExchange(userA, userB, aGive, aGet) {
-    // 检查A是否有足够的拼图送出
-    for (const id of aGive) {
-      if ((userA.have[id] || 0) < 2) {
-        return { valid: false, error: `${userA.name} 没有足够的拼图 #${id}` };
-      }
-    }
-
-    // 检查B是否有足够的拼图送出
-    for (const id of aGet) {
-      if ((userB.have[id] || 0) < 2) {
-        return { valid: false, error: `${userB.name} 没有足够的拼图 #${id}` };
-      }
-    }
-
-    // 检查限额
-    if (userA.getRemainingSend() < aGive.length) {
-      return { valid: false, error: `${userA.name} 今日送出限额不足` };
-    }
-    if (userA.getRemainingRecv() < aGet.length) {
-      return { valid: false, error: `${userA.name} 今日收到限额不足` };
-    }
-    if (userB.getRemainingSend() < aGet.length) {
-      return { valid: false, error: `${userB.name} 今日送出限额不足` };
-    }
-    if (userB.getRemainingRecv() < aGive.length) {
-      return { valid: false, error: `${userB.name} 今日收到限额不足` };
-    }
-
-    return { valid: true };
-  }
-}
-
-// ==============================================
-// 创建全局实例
-// ==============================================
-const matchCalculator = new MatchCalculator();
 
 // 导出模块
 if (typeof module !== 'undefined' && module.exports) {
-  module.exports = { 
-    MatchCalculator, 
-    PersonalRecorder, 
-    ExchangeExecutor,
-    matchCalculator 
-  };
+  module.exports = { MatchCalculator, PersonalRecorder };
 }

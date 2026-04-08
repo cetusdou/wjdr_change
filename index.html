@@ -3,112 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <title>🧩 拼图交换小助手</title>
-<style>
-  *{box-sizing:border-box;font-family:system-ui,-apple-system,sans-serif}
-  body{margin:0;padding:16px;background:#f0f2f5}
-  .container{max-width:1200px;margin:0 auto;background:white;padding:20px;border-radius:12px;box-shadow:0 2px 8px rgba(0,0,0,0.1)}
-  h1,h2,h3{color:#333;margin-top:0}
-  h1{font-size:24px;display:flex;align-items:center;gap:8px}
-  .section{margin-bottom:24px;padding:16px;background:#fafafa;border-radius:8px}
-  .section-title{font-size:16px;font-weight:bold;color:#555;margin-bottom:12px;display:flex;align-items:center;gap:6px}
-  
-  /* 日期显示 */
-  .limit-bar{display:flex;gap:16px;margin-bottom:16px;padding:12px;background:#e3f2fd;border-radius:8px;flex-wrap:wrap}
-  .limit-item{display:flex;align-items:center;gap:6px;font-size:14px}
-  .limit-item span{font-weight:bold;color:#1976d2}
-  
-  /* 大类卡片 */
-  .category-card{border:1px solid #e0e0e0;border-radius:8px;margin-bottom:12px;background:#fff;overflow:hidden}
-  .category-header{padding:12px 16px;background:#f5f5f5;cursor:pointer;display:flex;align-items:center;gap:12px;transition:background 0.2s}
-  .category-header:hover{background:#eeeeee}
-  .expand-icon{color:#666;font-size:12px;transition:transform 0.2s}
-  .category-name{font-weight:bold;color:#333;flex:1}
-  .category-count{font-size:12px;color:#888}
-  
-  /* 小类容器 */
-  .puzzles-container{padding:8px 16px 16px;display:none}
-  .puzzle-row{display:flex;align-items:center;padding:8px 0;border-bottom:1px solid #f0f0f0;flex-wrap:wrap;gap:8px}
-  .puzzle-row:last-child{border-bottom:none}
-  .puzzle-name{font-size:14px;color:#555;min-width:140px;flex-shrink:0}
-  .pieces-container{display:flex;flex-wrap:wrap;gap:4px;flex:1}
-  
-  /* 碎片按钮 */
-  .piece-btn{width:32px;height:32px;border:1px solid #ddd;border-radius:4px;background:#fff;cursor:pointer;font-size:12px;transition:all 0.2s;display:flex;align-items:center;justify-content:center}
-  .piece-btn:hover{border-color:#2196f3;background:#e3f2fd}
-  
-  /* 拥有状态 */
-  .piece-btn.have-1{background:#c8e6c9;border-color:#4caf50;color:#2e7d32}
-  .piece-btn.have-2{background:#81c784;border-color:#4caf50;color:#fff}
-  .piece-btn.have-extra{background:#4caf50;border-color:#388e3c;color:#fff;font-weight:bold}
-  
-  /* 想要状态 */
-  .piece-btn.want{background:#ffcdd2;border-color:#f44336;color:#c62828}
-  
-  /* 按钮 */
-  .btn{padding:10px 16px;background:#2196f3;color:white;border:none;border-radius:6px;cursor:pointer;font-size:14px;transition:all 0.2s;display:inline-flex;align-items:center;gap:6px}
-  .btn:hover{background:#1976d2;transform:translateY(-1px)}
-  .btn-success{background:#4caf50}
-  .btn-success:hover{background:#45a049}
-  .btn-warning{background:#ff9800}
-  .btn-warning:hover{background:#f57c00}
-  
-  /* 输入框 */
-  input{padding:10px 12px;border:1px solid #ddd;border-radius:6px;font-size:14px;outline:none}
-  input:focus{border-color:#2196f3}
-  
-  /* 匹配卡片 */
-  .match-card{border:1px solid #e0e0e0;padding:16px;margin-bottom:12px;border-radius:8px;background:#fff;transition:all 0.2s}
-  .match-card:hover{box-shadow:0 4px 12px rgba(0,0,0,0.1)}
-  .match-optimal{border-left:4px solid #4caf50;background:#f1f8e9}
-  .match-normal{border-left:4px solid #ffc107;background:#fff8e1}
-  .match-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:12px}
-  .match-user{font-weight:bold;font-size:16px;color:#333;display:flex;align-items:center;gap:6px}
-  .match-score{background:#e3f2fd;color:#1976d2;padding:4px 10px;border-radius:12px;font-size:12px;font-weight:bold}
-  .match-detail{font-size:14px;color:#666;line-height:1.8}
-  .match-detail strong{color:#333}
-  .match-actions{margin-top:12px;display:flex;gap:8px}
-  
-  /* 成员列表 */
-  .user-card{border:1px solid #e0e0e0;padding:12px;margin-bottom:8px;border-radius:8px;background:#fff}
-  .user-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:8px}
-  .user-name{font-weight:bold;color:#333}
-  .user-stats{font-size:12px;color:#888}
-  .puzzle-tags{display:flex;flex-wrap:wrap;gap:4px;margin-top:6px}
-  .tag{font-size:11px;padding:3px 8px;border-radius:4px;background:#e0e0e0;color:#555}
-  .tag-have{background:#c8e6c9;color:#2e7d32}
-  .tag-want{background:#ffcdd2;color:#c62828}
-  
-  /* 手动交易 */
-  .exchange-form{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-top:12px}
-  .exchange-col{padding:16px;background:#f5f5f5;border-radius:8px;max-height:500px;overflow-y:auto}
-  .exchange-col h4{margin:0 0 12px 0;font-size:14px;color:#555}
-  .puzzle-select{display:flex;flex-direction:column;gap:8px}
-  .select-item{padding:6px 12px;border:1px solid #ddd;border-radius:4px;cursor:pointer;font-size:12px;background:#fff;transition:all 0.2s;display:inline-block}
-  .select-item:hover{border-color:#2196f3}
-  .select-item.selected{background:#2196f3;color:white;border-color:#2196f3}
-  
-  /* 标签页 */
-  .tabs{display:flex;gap:4px;margin-bottom:16px;border-bottom:2px solid #e0e0e0;flex-wrap:wrap}
-  .tab{padding:10px 16px;cursor:pointer;border-bottom:2px solid transparent;margin-bottom:-2px;font-size:14px;color:#666;white-space:nowrap}
-  .tab:hover{color:#2196f3}
-  .tab.active{border-bottom-color:#2196f3;color:#2196f3;font-weight:bold}
-  .tab-content{display:none}
-  .tab-content.active{display:block}
-  
-  /* 空状态 */
-  .empty-state{text-align:center;padding:40px;color:#999}
-  .empty-state-icon{font-size:48px;margin-bottom:12px}
-  
-  /* 提示 */
-  .tip{font-size:12px;color:#888;margin-top:8px;margin-bottom:12px;padding:10px;background:#fff3e0;border-radius:4px;border-left:3px solid #ff9800}
-  
-  /* 响应式 */
-  @media (max-width: 768px) {
-    .exchange-form{grid-template-columns:1fr}
-    .puzzle-row{flex-direction:column;align-items:flex-start}
-    .puzzle-name{min-width:auto}
-  }
-</style>
+<link rel="stylesheet" href="css/style.css">
 </head>
 <body>
 
@@ -143,7 +38,7 @@
     <div class="tab active" onclick="handleSwitchTab('inventory', this)">📦 我的库存</div>
     <div class="tab" onclick="handleSwitchTab('match', this)">🔍 我的匹配</div>
     <div class="tab" onclick="handleSwitchTab('allmatches', this)">🌐 全局匹配</div>
-    <div class="tab" onclick="handleSwitchTab('manual', this)">⚙️ 记录交易</div>
+    <!-- <div class="tab" onclick="handleSwitchTab('manual', this)">⚙️ 记录交易</div> -->
     <div class="tab" onclick="handleSwitchTab('members', this)">👥 成员列表</div>
   </div>
   
@@ -152,9 +47,9 @@
     <div class="section">
       <div class="section-title">🟢 我的拼图（点击展开大类，点击按钮标记数量）</div>
       <div class="tip">
-        💡 点击大类展开查看小类，点击碎片按钮标记你的库存：
-        白色=没有，浅绿=有1张，中绿=有2张（可交换），深绿=有3张及以上。
-        数量循环：0→1→2→3→4→5→0
+        💡 点击大类展开查看小类，点击碎片按钮标记你多余的拼图（可交换）：
+        白色=没有多余，蓝色=多余1张，浅绿=多余2张，深绿=多余3张。
+        数量循环：0→1→2→3→0
       </div>
       <div id="haveContainer"></div>
     </div>
@@ -192,21 +87,24 @@
     <div class="section">
       <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px">
         <div class="section-title">🌐 全数据库匹配情况</div>
-        <button class="btn btn-success" onclick="handleCalculateAllMatches()">🔄 重新计算全局匹配</button>
+        <button id="recalculateBtn" class="btn btn-success" onclick="handleCalculateAllMatches()" style="display:none">🔄 重新计算全局匹配</button>
       </div>
       <div class="tip">
-        💡 这里显示数据库中所有可能的交换对，由系统统一计算。共 <span id="totalMatchPairs">0</span> 对匹配。
+        💡 系统每天自动计算一次全局最优匹配方案。共 <span id="totalMatchPairs">-</span> 对匹配。
+        <span id="adminOnlyTip" style="color:#f44336;display:none">（仅管理员可重新计算）</span>
+        <span id="lastCalculateTime" style="color:#666;font-size:11px;display:block;margin-top:4px"></span>
       </div>
       <div id="allMatchesResult">
         <div class="empty-state">
           <div class="empty-state-icon">🌐</div>
-          <div>点击"重新计算全局匹配"查看所有可能的交换对</div>
+          <div>正在加载匹配数据...</div>
         </div>
       </div>
     </div>
   </div>
   
-  <!-- 标签页内容: 记录交易 -->
+  <!-- 标签页内容: 记录交易 (已注释掉) -->
+  <!--
   <div id="tab-manual" class="tab-content">
     <div class="section">
       <div class="section-title">⚙️ 记录我的交易（无需填写对方）</div>
@@ -233,6 +131,7 @@
       </div>
     </div>
   </div>
+  -->
   
   <!-- 标签页内容: 成员列表 -->
   <div id="tab-members" class="tab-content">
@@ -264,6 +163,11 @@
 
 <script>
 // ==============================================
+// 创建全局实例
+// ==============================================
+const matchCalculator = new MatchCalculator();
+
+// ==============================================
 // 页面初始化
 // ==============================================
 document.addEventListener('DOMContentLoaded', async function() {
@@ -283,6 +187,10 @@ document.addEventListener('DOMContentLoaded', async function() {
     
     // 初始化UI
     await ui.init();
+    
+    // 自动加载今天的匹配结果（如果有缓存）
+    // 这会从数据库读取缓存，如果没有则自动计算
+    await ui.loadMatchResult(false);
   } else {
     alert('拼图配置加载失败，请检查 puzzle.json 文件');
   }
@@ -348,9 +256,9 @@ function handleLoadMyMatches() {
   ui.loadMyMatches();
 }
 
-async function handleExecuteManualRecord() {
-  await ui.executeManualRecord();
-}
+// async function handleExecuteManualRecord() {
+//   await ui.executeManualRecord();
+// }
 
 function handleSwitchTab(tabName, element) {
   ui.switchTab(tabName, element);
