@@ -1,19 +1,21 @@
 * {
   box-sizing: border-box;
   font-family: system-ui, -apple-system, sans-serif;
+  -webkit-tap-highlight-color: transparent;
 }
 
 body {
   margin: 0;
-  padding: 16px;
+  padding: 8px;
   background: #f0f2f5;
+  font-size: 14px;
 }
 
 .container {
   max-width: 1200px;
   margin: 0 auto;
   background: white;
-  padding: 20px;
+  padding: 12px;
   border-radius: 12px;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
 }
@@ -24,24 +26,25 @@ h1, h2, h3 {
 }
 
 h1 {
-  font-size: 24px;
+  font-size: 20px;
   display: flex;
   align-items: center;
   gap: 8px;
+  margin-bottom: 16px;
 }
 
 .section {
-  margin-bottom: 24px;
-  padding: 16px;
+  margin-bottom: 16px;
+  padding: 12px;
   background: #fafafa;
   border-radius: 8px;
 }
 
 .section-title {
-  font-size: 16px;
+  font-size: 15px;
   font-weight: bold;
   color: #555;
-  margin-bottom: 12px;
+  margin-bottom: 10px;
   display: flex;
   align-items: center;
   gap: 6px;
@@ -50,19 +53,19 @@ h1 {
 /* 日期显示 */
 .limit-bar {
   display: flex;
-  gap: 16px;
-  margin-bottom: 16px;
-  padding: 12px;
+  gap: 12px;
+  margin-bottom: 12px;
+  padding: 10px;
   background: #e3f2fd;
   border-radius: 8px;
   flex-wrap: wrap;
+  font-size: 13px;
 }
 
 .limit-item {
   display: flex;
   align-items: center;
-  gap: 6px;
-  font-size: 14px;
+  gap: 4px;
 }
 
 .limit-item span {
@@ -74,52 +77,59 @@ h1 {
 .category-card {
   border: 1px solid #e0e0e0;
   border-radius: 8px;
-  margin-bottom: 12px;
+  margin-bottom: 8px;
   background: #fff;
   overflow: hidden;
 }
 
 .category-header {
-  padding: 12px 16px;
+  padding: 12px;
   background: #f5f5f5;
   cursor: pointer;
   display: flex;
   align-items: center;
-  gap: 12px;
+  gap: 8px;
   transition: background 0.2s;
+  min-height: 44px;
 }
 
 .category-header:hover {
   background: #eeeeee;
 }
 
+.category-header:active {
+  background: #e0e0e0;
+}
+
 .expand-icon {
   color: #666;
   font-size: 12px;
   transition: transform 0.2s;
+  flex-shrink: 0;
 }
 
 .category-name {
   font-weight: bold;
   color: #333;
   flex: 1;
+  font-size: 14px;
 }
 
 .category-count {
-  font-size: 12px;
+  font-size: 11px;
   color: #888;
 }
 
 /* 小类容器 */
 .puzzles-container {
-  padding: 8px 16px 16px;
+  padding: 8px 12px 12px;
   display: none;
 }
 
 .puzzle-row {
   display: flex;
   align-items: center;
-  padding: 8px 0;
+  padding: 6px 0;
   border-bottom: 1px solid #f0f0f0;
   flex-wrap: wrap;
   gap: 8px;
@@ -130,37 +140,45 @@ h1 {
 }
 
 .puzzle-name {
-  font-size: 14px;
+  font-size: 13px;
   color: #555;
-  min-width: 140px;
+  min-width: 100px;
   flex-shrink: 0;
+  font-weight: 500;
 }
 
 .pieces-container {
   display: flex;
   flex-wrap: wrap;
-  gap: 4px;
+  gap: 6px;
   flex: 1;
 }
 
 /* 碎片按钮 */
 .piece-btn {
-  width: 32px;
-  height: 32px;
+  width: 36px;
+  height: 36px;
   border: 1px solid #ddd;
-  border-radius: 4px;
+  border-radius: 6px;
   background: #fff;
   cursor: pointer;
-  font-size: 12px;
-  transition: all 0.2s;
+  font-size: 13px;
+  transition: all 0.15s;
   display: flex;
   align-items: center;
   justify-content: center;
+  -webkit-touch-callout: none;
+  user-select: none;
+  touch-action: manipulation;
 }
 
 .piece-btn:hover {
   border-color: #2196f3;
   background: #e3f2fd;
+}
+
+.piece-btn:active {
+  transform: scale(0.95);
 }
 
 /* 拥有状态 - 每种数量不同颜色 */
@@ -192,7 +210,7 @@ h1 {
 
 /* 按钮 */
 .btn {
-  padding: 10px 16px;
+  padding: 10px 14px;
   background: #2196f3;
   color: white;
   border: none;
@@ -202,12 +220,18 @@ h1 {
   transition: all 0.2s;
   display: inline-flex;
   align-items: center;
-  gap: 6px;
+  justify-content: center;
+  gap: 4px;
+  min-height: 40px;
+  touch-action: manipulation;
 }
 
 .btn:hover {
   background: #1976d2;
-  transform: translateY(-1px);
+}
+
+.btn:active {
+  transform: scale(0.98);
 }
 
 .btn-success {
@@ -233,6 +257,7 @@ input {
   border-radius: 6px;
   font-size: 14px;
   outline: none;
+  min-height: 40px;
 }
 
 input:focus {
@@ -242,24 +267,24 @@ input:focus {
 /* 匹配卡片 */
 .match-card {
   border: 1px solid #e0e0e0;
-  padding: 16px;
-  margin-bottom: 12px;
+  padding: 12px;
+  margin-bottom: 10px;
   border-radius: 8px;
   background: #fff;
   transition: all 0.2s;
 }
 
 .match-card:hover {
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
 }
 
 .match-optimal {
-  border-left: 4px solid #4caf50;
+  border-left: 3px solid #4caf50;
   background: #f1f8e9;
 }
 
 .match-normal {
-  border-left: 4px solid #ffc107;
+  border-left: 3px solid #ffc107;
   background: #fff8e1;
 }
 
@@ -267,31 +292,34 @@ input:focus {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 12px;
+  margin-bottom: 8px;
+  flex-wrap: wrap;
+  gap: 4px;
 }
 
 .match-user {
   font-weight: bold;
-  font-size: 16px;
+  font-size: 15px;
   color: #333;
   display: flex;
   align-items: center;
-  gap: 6px;
+  gap: 4px;
 }
 
 .match-score {
   background: #e3f2fd;
   color: #1976d2;
-  padding: 4px 10px;
+  padding: 3px 8px;
   border-radius: 12px;
   font-size: 12px;
   font-weight: bold;
+  white-space: nowrap;
 }
 
 .match-detail {
-  font-size: 14px;
+  font-size: 13px;
   color: #666;
-  line-height: 1.8;
+  line-height: 1.6;
 }
 
 .match-detail strong {
@@ -299,7 +327,7 @@ input:focus {
 }
 
 .match-actions {
-  margin-top: 12px;
+  margin-top: 10px;
   display: flex;
   gap: 8px;
 }
@@ -307,7 +335,7 @@ input:focus {
 /* 成员列表 */
 .user-card {
   border: 1px solid #e0e0e0;
-  padding: 12px;
+  padding: 10px;
   margin-bottom: 8px;
   border-radius: 8px;
   background: #fff;
@@ -317,16 +345,19 @@ input:focus {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 8px;
+  margin-bottom: 6px;
+  flex-wrap: wrap;
+  gap: 4px;
 }
 
 .user-name {
   font-weight: bold;
   color: #333;
+  font-size: 14px;
 }
 
 .user-stats {
-  font-size: 12px;
+  font-size: 11px;
   color: #888;
 }
 
@@ -334,12 +365,12 @@ input:focus {
   display: flex;
   flex-wrap: wrap;
   gap: 4px;
-  margin-top: 6px;
+  margin-top: 4px;
 }
 
 .tag {
   font-size: 11px;
-  padding: 3px 8px;
+  padding: 2px 6px;
   border-radius: 4px;
   background: #e0e0e0;
   color: #555;
@@ -359,39 +390,42 @@ input:focus {
 .exchange-form {
   display: grid;
   grid-template-columns: 1fr 1fr;
-  gap: 16px;
-  margin-top: 12px;
+  gap: 12px;
+  margin-top: 10px;
 }
 
 .exchange-col {
-  padding: 16px;
+  padding: 12px;
   background: #f5f5f5;
   border-radius: 8px;
-  max-height: 500px;
+  max-height: 400px;
   overflow-y: auto;
 }
 
 .exchange-col h4 {
-  margin: 0 0 12px 0;
-  font-size: 14px;
+  margin: 0 0 10px 0;
+  font-size: 13px;
   color: #555;
 }
 
 .puzzle-select {
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  gap: 6px;
 }
 
 .select-item {
-  padding: 6px 12px;
+  padding: 8px 10px;
   border: 1px solid #ddd;
   border-radius: 4px;
   cursor: pointer;
-  font-size: 12px;
+  font-size: 13px;
   background: #fff;
   transition: all 0.2s;
   display: inline-block;
+  min-height: 36px;
+  display: flex;
+  align-items: center;
 }
 
 .select-item:hover {
@@ -407,20 +441,31 @@ input:focus {
 /* 标签页 */
 .tabs {
   display: flex;
-  gap: 4px;
-  margin-bottom: 16px;
+  gap: 2px;
+  margin-bottom: 12px;
   border-bottom: 2px solid #e0e0e0;
-  flex-wrap: wrap;
+  flex-wrap: nowrap;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: none;
+}
+
+.tabs::-webkit-scrollbar {
+  display: none;
 }
 
 .tab {
-  padding: 10px 16px;
+  padding: 10px 12px;
   cursor: pointer;
   border-bottom: 2px solid transparent;
   margin-bottom: -2px;
-  font-size: 14px;
+  font-size: 13px;
   color: #666;
   white-space: nowrap;
+  flex-shrink: 0;
+  min-height: 40px;
+  display: flex;
+  align-items: center;
 }
 
 .tab:hover {
@@ -444,37 +489,141 @@ input:focus {
 /* 空状态 */
 .empty-state {
   text-align: center;
-  padding: 40px;
+  padding: 32px 20px;
   color: #999;
 }
 
 .empty-state-icon {
-  font-size: 48px;
-  margin-bottom: 12px;
+  font-size: 40px;
+  margin-bottom: 10px;
 }
 
 /* 提示 */
 .tip {
   font-size: 12px;
-  color: #888;
-  margin-top: 8px;
-  margin-bottom: 12px;
-  padding: 10px;
+  color: #666;
+  margin-top: 6px;
+  margin-bottom: 10px;
+  padding: 8px 10px;
   background: #fff3e0;
   border-radius: 4px;
   border-left: 3px solid #ff9800;
+  line-height: 1.5;
 }
 
-/* 响应式 */
+/* 响应式 - 手机端优化 */
 @media (max-width: 768px) {
-  .exchange-form {
-    grid-template-columns: 1fr;
+  body {
+    padding: 4px;
   }
+  
+  .container {
+    padding: 10px;
+    border-radius: 8px;
+  }
+  
+  h1 {
+    font-size: 18px;
+  }
+  
+  .section {
+    padding: 10px;
+    margin-bottom: 12px;
+  }
+  
+  .section-title {
+    font-size: 14px;
+  }
+  
+  .limit-bar {
+    padding: 8px;
+    font-size: 12px;
+  }
+  
+  .category-header {
+    padding: 10px;
+    min-height: 44px;
+  }
+  
   .puzzle-row {
     flex-direction: column;
     align-items: flex-start;
+    padding: 8px 0;
   }
+  
   .puzzle-name {
     min-width: auto;
+    font-size: 13px;
+    margin-bottom: 4px;
+  }
+  
+  .pieces-container {
+    gap: 8px;
+  }
+  
+  .piece-btn {
+    width: 40px;
+    height: 40px;
+    font-size: 14px;
+  }
+  
+  .btn {
+    padding: 10px 12px;
+    font-size: 13px;
+    min-height: 40px;
+  }
+  
+  input {
+    padding: 10px;
+    font-size: 16px; /* 防止iOS缩放 */
+  }
+  
+  .exchange-form {
+    grid-template-columns: 1fr;
+  }
+  
+  .exchange-col {
+    max-height: 300px;
+    padding: 10px;
+  }
+  
+  .tab {
+    padding: 10px 10px;
+    font-size: 12px;
+  }
+  
+  .match-card {
+    padding: 10px;
+  }
+  
+  .match-user {
+    font-size: 14px;
+  }
+  
+  .match-detail {
+    font-size: 12px;
+  }
+  
+  .user-header {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+}
+
+/* 超小屏幕优化 */
+@media (max-width: 360px) {
+  h1 {
+    font-size: 16px;
+  }
+  
+  .piece-btn {
+    width: 36px;
+    height: 36px;
+    font-size: 13px;
+  }
+  
+  .tab {
+    padding: 8px 8px;
+    font-size: 11px;
   }
 }
