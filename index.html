@@ -1,0 +1,974 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>🧩 拼图交换小助手</title>
+<style>
+  *{box-sizing:border-box;font-family:system-ui,-apple-system,sans-serif}
+  body{margin:0;padding:16px;background:#f0f2f5}
+  .container{max-width:1200px;margin:0 auto;background:white;padding:20px;border-radius:12px;box-shadow:0 2px 8px rgba(0,0,0,0.1)}
+  h1,h2,h3{color:#333;margin-top:0}
+  h1{font-size:24px;display:flex;align-items:center;gap:8px}
+  .section{margin-bottom:24px;padding:16px;background:#fafafa;border-radius:8px}
+  .section-title{font-size:16px;font-weight:bold;color:#555;margin-bottom:12px;display:flex;align-items:center;gap:6px}
+  
+  /* 限额显示 */
+  .limit-bar{display:flex;gap:16px;margin-bottom:16px;padding:12px;background:#e3f2fd;border-radius:8px}
+  .limit-item{display:flex;align-items:center;gap:6px;font-size:14px}
+  .limit-item span{font-weight:bold;color:#1976d2}
+  
+  /* 拼图网格 */
+  .puzzle-grid{display:grid;grid-template-columns:repeat(12,1fr);gap:6px;margin-top:8px}
+  .puzzle-item{position:relative;padding:8px 4px;text-align:center;border:1px solid #ddd;border-radius:6px;cursor:pointer;font-size:12px;background:#fff;transition:all 0.2s}
+  .puzzle-item:hover{border-color:#2196f3;transform:scale(1.05)}
+  .puzzle-item.have{background:#c8e6c9;border-color:#4caf50}
+  .puzzle-item.want{background:#ffcdd2;border-color:#f44336}
+  .puzzle-count{position:absolute;top:-6px;right:-6px;background:#ff5722;color:white;font-size:10px;width:18px;height:18px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:bold}
+  
+  /* 数量控制 */
+  .quantity-control{display:flex;align-items:center;gap:4px;margin-top:4px;justify-content:center}
+  .qty-btn{width:20px;height:20px;border:none;border-radius:4px;background:#2196f3;color:white;font-size:12px;cursor:pointer;display:flex;align-items:center;justify-content:center}
+  .qty-btn:hover{background:#1976d2}
+  .qty-btn:disabled{background:#ccc;cursor:not-allowed}
+  
+  /* 按钮 */
+  .btn{padding:10px 16px;background:#2196f3;color:white;border:none;border-radius:6px;cursor:pointer;font-size:14px;transition:all 0.2s;display:inline-flex;align-items:center;gap:6px}
+  .btn:hover{background:#1976d2;transform:translateY(-1px)}
+  .btn-success{background:#4caf50}
+  .btn-success:hover{background:#45a049}
+  .btn-warning{background:#ff9800}
+  .btn-warning:hover{background:#f57c00}
+  .btn-danger{background:#f44336}
+  .btn-danger:hover{background:#d32f2f}
+  .btn-secondary{background:#757575}
+  .btn-secondary:hover{background:#616161}
+  
+  /* 输入框 */
+  input,select{padding:10px 12px;border:1px solid #ddd;border-radius:6px;font-size:14px;outline:none}
+  input:focus,select:focus{border-color:#2196f3}
+  
+  /* 匹配卡片 */
+  .match-card{border:1px solid #e0e0e0;padding:16px;margin-bottom:12px;border-radius:8px;background:#fff;transition:all 0.2s}
+  .match-card:hover{box-shadow:0 4px 12px rgba(0,0,0,0.1)}
+  .match-optimal{border-left:4px solid #4caf50;background:#f1f8e9}
+  .match-normal{border-left:4px solid #ffc107;background:#fff8e1}
+  .match-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:12px}
+  .match-user{font-weight:bold;font-size:16px;color:#333;display:flex;align-items:center;gap:6px}
+  .match-score{background:#e3f2fd;color:#1976d2;padding:4px 10px;border-radius:12px;font-size:12px;font-weight:bold}
+  .match-detail{font-size:14px;color:#666;line-height:1.8}
+  .match-detail strong{color:#333}
+  .match-actions{margin-top:12px;display:flex;gap:8px}
+  
+  /* 成员列表 */
+  .user-card{border:1px solid #e0e0e0;padding:12px;margin-bottom:8px;border-radius:8px;background:#fff}
+  .user-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:8px}
+  .user-name{font-weight:bold;color:#333}
+  .user-stats{font-size:12px;color:#888}
+  .puzzle-tags{display:flex;flex-wrap:wrap;gap:4px;margin-top:6px}
+  .tag{font-size:11px;padding:3px 8px;border-radius:4px;background:#e0e0e0;color:#555}
+  .tag-have{background:#c8e6c9;color:#2e7d32}
+  .tag-want{background:#ffcdd2;color:#c62828}
+  
+  /* 手动交换 */
+  .exchange-form{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-top:12px}
+  .exchange-col{padding:16px;background:#f5f5f5;border-radius:8px}
+  .exchange-col h4{margin:0 0 12px 0;font-size:14px;color:#555}
+  .puzzle-select{max-height:200px;overflow-y:auto;display:flex;flex-wrap:wrap;gap:6px}
+  .select-item{padding:6px 12px;border:1px solid #ddd;border-radius:4px;cursor:pointer;font-size:12px;background:#fff}
+  .select-item:hover{border-color:#2196f3}
+  .select-item.selected{background:#2196f3;color:white;border-color:#2196f3}
+  .select-item.disabled{opacity:0.5;cursor:not-allowed;background:#f5f5f5}
+  
+  /* 标签页 */
+  .tabs{display:flex;gap:4px;margin-bottom:16px;border-bottom:2px solid #e0e0e0}
+  .tab{padding:10px 20px;cursor:pointer;border-bottom:2px solid transparent;margin-bottom:-2px;font-size:14px;color:#666}
+  .tab:hover{color:#2196f3}
+  .tab.active{border-bottom-color:#2196f3;color:#2196f3;font-weight:bold}
+  .tab-content{display:none}
+  .tab-content.active{display:block}
+  
+  /* 空状态 */
+  .empty-state{text-align:center;padding:40px;color:#999}
+  .empty-state-icon{font-size:48px;margin-bottom:12px}
+  
+  /* 提示 */
+  .tip{font-size:12px;color:#888;margin-top:8px;padding:8px;background:#fff3e0;border-radius:4px;border-left:3px solid #ff9800}
+</style>
+</head>
+<body>
+
+<div class="container">
+  <h1>🧩 拼图交换小助手</h1>
+  
+  <!-- 用户登录区 -->
+  <div class="section">
+    <div style="display:flex;gap:12px;align-items:center;flex-wrap:wrap">
+      <input type="text" id="nickname" placeholder="输入你的昵称" style="width:200px">
+      <button class="btn" onclick="loadMyData()">📂 加载我的数据</button>
+      <button class="btn btn-success" onclick="saveMyPuzzles()">💾 保存数据</button>
+      <span id="currentUser" style="color:#666;font-size:14px"></span>
+    </div>
+  </div>
+  
+  <!-- 今日限额 -->
+  <div class="limit-bar">
+    <div class="limit-item">📅 今日日期: <span id="todayDate"></span></div>
+    <div class="limit-item">📤 今日送出: <span id="sentCount">0</span>/5</div>
+    <div class="limit-item">📥 今日收到: <span id="recvCount">0</span>/3</div>
+    <div class="limit-item" style="margin-left:auto;font-size:12px;color:#666">💡 每人每天可送出5个，收到3个</div>
+  </div>
+  
+  <!-- 标签页导航 -->
+  <div class="tabs">
+    <div class="tab active" onclick="switchTab('inventory')">📦 我的库存</div>
+    <div class="tab" onclick="switchTab('match')">🔍 我的匹配</div>
+    <div class="tab" onclick="switchTab('allmatches')">🌐 全局匹配</div>
+    <div class="tab" onclick="switchTab('manual')">⚙️ 手动交换</div>
+    <div class="tab" onclick="switchTab('members')">👥 成员列表</div>
+  </div>
+  
+  <!-- 标签页内容: 我的库存 -->
+  <div id="tab-inventory" class="tab-content active">
+    <div class="section">
+      <div class="section-title">🟢 多余拼图（带数量，多余的可用于交换）</div>
+      <div class="tip">点击拼图增加数量，再次点击减少。数量≥2表示有多余可以交换。</div>
+      <div class="puzzle-grid" id="haveGrid"></div>
+    </div>
+    
+    <div class="section">
+      <div class="section-title">🔴 缺少拼图（点击标记你需要的拼图）</div>
+      <div class="puzzle-grid" id="wantGrid"></div>
+    </div>
+  </div>
+  
+  <!-- 标签页内容: 我的匹配 -->
+  <div id="tab-match" class="tab-content">
+    <div class="section">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px">
+        <div class="section-title">🔍 系统为我推荐的交换</div>
+        <button class="btn btn-success" onclick="loadMyMatches()">🔄 刷新</button>
+      </div>
+      <div class="tip">
+        💡 系统已自动计算全数据库的最佳匹配方案。这里只显示与你相关的交换建议。
+      </div>
+      <div id="matchResult">
+        <div class="empty-state">
+          <div class="empty-state-icon">🔍</div>
+          <div>点击"刷新"查看系统为你推荐的交换</div>
+        </div>
+      </div>
+    </div>
+  </div>
+  
+  <!-- 标签页内容: 全局匹配 -->
+  <div id="tab-allmatches" class="tab-content">
+    <div class="section">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px">
+        <div class="section-title">🌐 全数据库匹配情况</div>
+        <button class="btn btn-success" onclick="calculateAllMatches()">🔄 重新计算全局匹配</button>
+      </div>
+      <div class="tip">
+        💡 这里显示数据库中所有可能的交换对，由系统统一计算。共 <span id="totalMatchPairs">0</span> 对匹配。
+      </div>
+      <div id="allMatchesResult">
+        <div class="empty-state">
+          <div class="empty-state-icon">🌐</div>
+          <div>点击"重新计算全局匹配"查看所有可能的交换对</div>
+        </div>
+      </div>
+    </div>
+  </div>
+  
+  <!-- 标签页内容: 手动交换 -->
+  <div id="tab-manual" class="tab-content">
+    <div class="section">
+      <div class="section-title">⚙️ 手动发起交换</div>
+      <div style="margin-bottom:16px">
+        <label style="font-size:14px;color:#555">对方昵称：</label>
+        <input type="text" id="targetUser" placeholder="输入对方昵称" style="width:200px;margin-left:8px">
+      </div>
+      <div class="exchange-form">
+        <div class="exchange-col">
+          <h4>📤 我要送出（点击选择，需数量≥2）</h4>
+          <div class="puzzle-select" id="manualGive"></div>
+        </div>
+        <div class="exchange-col">
+          <h4>📥 我要收到（点击选择）</h4>
+          <div class="puzzle-select" id="manualGet"></div>
+        </div>
+      </div>
+      <div style="margin-top:16px">
+        <div id="manualExchangeSummary" style="margin-bottom:12px;font-size:14px;color:#666"></div>
+        <button class="btn btn-success" onclick="executeManualExchange()">✅ 确认执行交换</button>
+      </div>
+    </div>
+  </div>
+  
+  <!-- 标签页内容: 成员列表 -->
+  <div id="tab-members" class="tab-content">
+    <div class="section">
+      <div class="section-title">👥 所有成员</div>
+      <div id="membersList">
+        <div class="empty-state">
+          <div class="empty-state-icon">👥</div>
+          <div>暂无成员数据</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Firebase SDK -->
+<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js"></script>
+
+<script>
+// ==============================================
+// 配置
+// ==============================================
+const CONFIG = {
+  TOTAL_PUZZLE: 144,      // 总拼图数
+  DAILY_SEND_LIMIT: 5,    // 每日送出上限
+  DAILY_RECV_LIMIT: 3     // 每日收到上限
+};
+
+// Firebase 配置 - 请替换为你自己的配置
+const firebaseConfig = {
+  apiKey: "YOUR_API_KEY",
+  authDomain: "YOUR_PROJECT.firebaseapp.com",
+  projectId: "YOUR_PROJECT_ID",
+  storageBucket: "YOUR_PROJECT.appspot.com",
+  messagingSenderId: "YOUR_SENDER_ID",
+  appId: "YOUR_APP_ID"
+};
+
+// 初始化 Firebase
+try {
+  firebase.initializeApp(firebaseConfig);
+} catch (e) {
+  console.log("Firebase 配置需要更新");
+}
+const db = firebase.firestore ? firebase.firestore() : null;
+
+// ==============================================
+// 数据状态
+// ==============================================
+let myData = {
+  name: "",
+  have: {},      // { puzzleId: count }
+  want: [],      // [ puzzleId ]
+  dailyLimit: { date: "", sent: 0, received: 0 }
+};
+let allUsers = [];
+let manualGiveSelected = [];
+let manualGetSelected = [];
+
+// ==============================================
+// 初始化
+// ==============================================
+function init() {
+  document.getElementById("todayDate").innerText = getToday();
+  createHaveGrid();
+  createWantGrid();
+  updateLimitDisplay();
+}
+
+function getToday() {
+  return new Date().toISOString().split('T')[0];
+}
+
+// ==============================================
+// 创建拼图网格
+// ==============================================
+function createHaveGrid() {
+  const el = document.getElementById("haveGrid");
+  el.innerHTML = "";
+  for (let i = 1; i <= CONFIG.TOTAL_PUZZLE; i++) {
+    const div = document.createElement("div");
+    div.className = "puzzle-item";
+    div.id = `have-${i}`;
+    div.innerHTML = `
+      <div>${i}</div>
+      <div class="puzzle-count" id="count-${i}" style="display:none">0</div>
+    `;
+    div.onclick = () => toggleHave(i);
+    el.appendChild(div);
+  }
+}
+
+function createWantGrid() {
+  const el = document.getElementById("wantGrid");
+  el.innerHTML = "";
+  for (let i = 1; i <= CONFIG.TOTAL_PUZZLE; i++) {
+    const div = document.createElement("div");
+    div.className = "puzzle-item";
+    div.id = `want-${i}`;
+    div.innerText = i;
+    div.onclick = () => toggleWant(i);
+    el.appendChild(div);
+  }
+}
+
+// ==============================================
+// 数据操作
+// ==============================================
+function toggleHave(id) {
+  const current = myData.have[id] || 0;
+  if (current === 0) {
+    myData.have[id] = 1;
+  } else if (current === 1) {
+    myData.have[id] = 2;  // 标记为有多余
+  } else {
+    myData.have[id] = current + 1;
+  }
+  // 如果数量太多可以循环回0
+  if (myData.have[id] > 9) {
+    delete myData.have[id];
+  }
+  updateHaveDisplay(id);
+}
+
+function decreaseHave(id) {
+  const current = myData.have[id] || 0;
+  if (current > 0) {
+    if (current === 1) {
+      delete myData.have[id];
+    } else {
+      myData.have[id] = current - 1;
+    }
+    updateHaveDisplay(id);
+  }
+  event.stopPropagation();
+}
+
+function updateHaveDisplay(id) {
+  const div = document.getElementById(`have-${id}`);
+  const countEl = document.getElementById(`count-${id}`);
+  const count = myData.have[id] || 0;
+  
+  div.classList.remove("have");
+  countEl.style.display = "none";
+  
+  if (count > 0) {
+    div.classList.add("have");
+    if (count > 1) {
+      countEl.innerText = count;
+      countEl.style.display = "flex";
+    }
+  }
+}
+
+function toggleWant(id) {
+  const idx = myData.want.indexOf(id);
+  const div = document.getElementById(`want-${id}`);
+  
+  if (idx === -1) {
+    myData.want.push(id);
+    div.classList.add("want");
+  } else {
+    myData.want.splice(idx, 1);
+    div.classList.remove("want");
+  }
+}
+
+function updateLimitDisplay() {
+  const today = getToday();
+  let sent = 0, received = 0;
+  
+  if (myData.dailyLimit && myData.dailyLimit.date === today) {
+    sent = myData.dailyLimit.sent || 0;
+    received = myData.dailyLimit.received || 0;
+  }
+  
+  document.getElementById("sentCount").innerText = sent;
+  document.getElementById("recvCount").innerText = received;
+}
+
+// ==============================================
+// 保存/加载
+// ==============================================
+async function saveMyPuzzles() {
+  const name = document.getElementById("nickname").value.trim();
+  if (!name) return alert("请输入昵称");
+  
+  if (!db) return alert("Firebase 未配置，请先在代码中设置 Firebase 配置");
+  
+  myData.name = name;
+  myData.updateTime = new Date().toISOString();
+  
+  // 确保 dailyLimit 结构正确
+  if (!myData.dailyLimit || myData.dailyLimit.date !== getToday()) {
+    myData.dailyLimit = { date: getToday(), sent: 0, received: 0 };
+  }
+  
+  try {
+    await db.collection("puzzleUsers").doc(name).set(myData);
+    document.getElementById("currentUser").innerText = `当前用户: ${name}`;
+    alert("保存成功！");
+    await fetchAllUsers();
+  } catch (e) {
+    alert("保存失败: " + e.message);
+  }
+}
+
+async function loadMyData() {
+  const name = document.getElementById("nickname").value.trim();
+  if (!name) return alert("请输入昵称");
+  
+  if (!db) return alert("Firebase 未配置，请先在代码中设置 Firebase 配置");
+  
+  try {
+    const doc = await db.collection("puzzleUsers").doc(name).get();
+    if (!doc.exists) {
+      // 新用户，初始化数据
+      myData = { name, have: {}, want: [], dailyLimit: { date: getToday(), sent: 0, received: 0 } };
+      resetDisplay();
+      document.getElementById("currentUser").innerText = `新用户: ${name}（请设置库存后保存）`;
+      return;
+    }
+    
+    myData = doc.data();
+    
+    // 检查是否需要重置每日限额
+    if (!myData.dailyLimit || myData.dailyLimit.date !== getToday()) {
+      myData.dailyLimit = { date: getToday(), sent: 0, received: 0 };
+    }
+    
+    refreshDisplay();
+    document.getElementById("currentUser").innerText = `当前用户: ${name}`;
+    updateLimitDisplay();
+    await fetchAllUsers();
+  } catch (e) {
+    alert("加载失败: " + e.message);
+  }
+}
+
+function resetDisplay() {
+  for (let i = 1; i <= CONFIG.TOTAL_PUZZLE; i++) {
+    document.getElementById(`have-${i}`).classList.remove("have");
+    document.getElementById(`count-${i}`).style.display = "none";
+    document.getElementById(`want-${i}`).classList.remove("want");
+  }
+}
+
+function refreshDisplay() {
+  resetDisplay();
+  
+  // 刷新 have
+  for (const [id, count] of Object.entries(myData.have || {})) {
+    const numId = Number(id);
+    if (count > 0) {
+      document.getElementById(`have-${numId}`).classList.add("have");
+      if (count > 1) {
+        const countEl = document.getElementById(`count-${numId}`);
+        countEl.innerText = count;
+        countEl.style.display = "flex";
+      }
+    }
+  }
+  
+  // 刷新 want
+  for (const id of myData.want || []) {
+    document.getElementById(`want-${id}`).classList.add("want");
+  }
+}
+
+async function fetchAllUsers() {
+  if (!db) return;
+  try {
+    const snap = await db.collection("puzzleUsers").get();
+    allUsers = snap.docs.map(d => d.data());
+    renderMembersList();
+    renderManualExchangeOptions();
+  } catch (e) {
+    console.error("获取用户列表失败", e);
+  }
+}
+
+// ==============================================
+// 全局匹配计算（计算所有用户间的匹配）
+// ==============================================
+let allMatchesCache = []; // 缓存全局匹配结果
+
+async function calculateAllMatches() {
+  if (!db) return alert("Firebase 未配置");
+  
+  await fetchAllUsers();
+  
+  if (allUsers.length < 2) {
+    document.getElementById("allMatchesResult").innerHTML = `
+      <div class="empty-state">
+        <div class="empty-state-icon">👥</div>
+        <div>数据库中用户不足2人，无法匹配</div>
+      </div>
+    `;
+    document.getElementById("totalMatchPairs").innerText = "0";
+    return;
+  }
+  
+  // 计算所有用户间的匹配对
+  allMatchesCache = [];
+  const today = getToday();
+  
+  for (let i = 0; i < allUsers.length; i++) {
+    for (let j = i + 1; j < allUsers.length; j++) {
+      const userA = allUsers[i];
+      const userB = allUsers[j];
+      
+      const match = calculateMatchBetween(userA, userB, today);
+      if (match) {
+        allMatchesCache.push(match);
+      }
+    }
+  }
+  
+  // 按交换数量降序排序
+  allMatchesCache.sort((a, b) => b.exchangeCount - a.exchangeCount);
+  
+  document.getElementById("totalMatchPairs").innerText = allMatchesCache.length;
+  renderAllMatches();
+  
+  // 同时刷新当前用户的匹配（如果有）
+  const myName = document.getElementById("nickname").value.trim();
+  if (myName && myData.name) {
+    loadMyMatches();
+  }
+}
+
+function calculateMatchBetween(userA, userB, today) {
+  // A的剩余限额
+  const aSent = (userA.dailyLimit?.date === today) ? (userA.dailyLimit?.sent || 0) : 0;
+  const aRecv = (userA.dailyLimit?.date === today) ? (userA.dailyLimit?.received || 0) : 0;
+  const aRemainingSend = CONFIG.DAILY_SEND_LIMIT - aSent;
+  const aRemainingRecv = CONFIG.DAILY_RECV_LIMIT - aRecv;
+  
+  // B的剩余限额
+  const bSent = (userB.dailyLimit?.date === today) ? (userB.dailyLimit?.sent || 0) : 0;
+  const bRecv = (userB.dailyLimit?.date === today) ? (userB.dailyLimit?.received || 0) : 0;
+  const bRemainingSend = CONFIG.DAILY_SEND_LIMIT - bSent;
+  const bRemainingRecv = CONFIG.DAILY_RECV_LIMIT - bRecv;
+  
+  // A可以给B的：A有>1张 且 B缺的
+  const aCanGive = [];
+  for (const [id, count] of Object.entries(userA.have || {})) {
+    if (count > 1 && userB.want?.includes(Number(id))) {
+      aCanGive.push(Number(id));
+    }
+  }
+  
+  // B可以给A的：B有>1张 且 A缺的
+  const bCanGive = [];
+  for (const [id, count] of Object.entries(userB.have || {})) {
+    if (count > 1 && userA.want?.includes(Number(id))) {
+      bCanGive.push(Number(id));
+    }
+  }
+  
+  // 计算最大可交换数量
+  const maxByPuzzle = Math.min(aCanGive.length, bCanGive.length);
+  const maxByALimit = Math.min(aRemainingSend, aRemainingRecv);
+  const maxByBLimit = Math.min(bRemainingSend, bRemainingRecv);
+  const actualExchangeCount = Math.min(maxByPuzzle, maxByALimit, maxByBLimit);
+  
+  if (actualExchangeCount > 0) {
+    return {
+      userA: userA.name,
+      userB: userB.name,
+      aGive: aCanGive.slice(0, actualExchangeCount),
+      aGet: bCanGive.slice(0, actualExchangeCount),
+      exchangeCount: actualExchangeCount,
+      aRemaining: { send: aRemainingSend, recv: aRemainingRecv },
+      bRemaining: { send: bRemainingSend, recv: bRemainingRecv }
+    };
+  }
+  
+  return null;
+}
+
+function renderAllMatches() {
+  const el = document.getElementById("allMatchesResult");
+  
+  if (allMatchesCache.length === 0) {
+    el.innerHTML = `
+      <div class="empty-state">
+        <div class="empty-state-icon">😔</div>
+        <div>暂无可行交换对</div>
+        <div style="font-size:12px;color:#999;margin-top:8px">当前数据库中没有互补需求的用户组合</div>
+      </div>
+    `;
+    return;
+  }
+  
+  el.innerHTML = allMatchesCache.map((m, idx) => `
+    <div class="match-card ${m.exchangeCount >= 3 ? 'match-optimal' : 'match-normal'}">
+      <div class="match-header">
+        <div class="match-user">👤 ${m.userA} ⇄ 👤 ${m.userB}</div>
+        <div class="match-score">可交换 ${m.exchangeCount} 张</div>
+      </div>
+      <div class="match-detail">
+        <div>📤 ${m.userA} 给 ${m.userB}: <strong>${m.aGive.join(", ")}</strong></div>
+        <div>📥 ${m.userA} 从 ${m.userB} 得: <strong>${m.aGet.join(", ")}</strong></div>
+        <div style="margin-top:8px;font-size:12px;color:#888">
+          ${m.userA}剩余限额: 送出${m.aRemaining.send} | 收到${m.aRemaining.recv} · 
+          ${m.userB}剩余限额: 送出${m.bRemaining.send} | 收到${m.bRemaining.recv}
+        </div>
+      </div>
+    </div>
+  `).join("");
+}
+
+// ==============================================
+// 加载与当前用户相关的匹配
+// ==============================================
+async function loadMyMatches() {
+  const name = document.getElementById("nickname").value.trim();
+  if (!name) return alert("请先输入昵称并加载数据");
+  if (!myData.name) return alert("请先保存你的数据");
+  
+  // 如果没有缓存，先计算全局匹配
+  if (allMatchesCache.length === 0) {
+    await calculateAllMatches();
+  }
+  
+  // 筛选出与当前用户相关的匹配
+  const myMatches = allMatchesCache.filter(m => m.userA === name || m.userB === name);
+  
+  // 转换为以当前用户视角的格式
+  const formattedMatches = myMatches.map(m => {
+    const isUserA = m.userA === name;
+    return {
+      user: isUserA ? m.userB : m.userA,
+      iGive: isUserA ? m.aGive : m.aGet,
+      iGet: isUserA ? m.aGet : m.aGive,
+      exchangeCount: m.exchangeCount,
+      myRemaining: isUserA ? m.aRemaining : m.bRemaining,
+      hisRemaining: isUserA ? m.bRemaining : m.aRemaining
+    };
+  });
+  
+  renderMatches(formattedMatches);
+}
+
+function renderMatches(matches) {
+  const el = document.getElementById("matchResult");
+  
+  if (matches.length === 0) {
+    el.innerHTML = `
+      <div class="empty-state">
+        <div class="empty-state-icon">😔</div>
+        <div>暂无可行交换建议</div>
+        <div style="font-size:12px;color:#999;margin-top:8px">可能是：1)没有互补需求 2)今日限额已用完 3)缺少其他用户数据</div>
+      </div>
+    `;
+    return;
+  }
+  
+  el.innerHTML = matches.map((m, idx) => `
+    <div class="match-card ${m.exchangeCount >= 3 ? 'match-optimal' : 'match-normal'}">
+      <div class="match-header">
+        <div class="match-user">👤 ${m.user}</div>
+        <div class="match-score">可交换 ${m.exchangeCount} 张</div>
+      </div>
+      <div class="match-detail">
+        <div>📤 你给他: <strong>${m.iGive.join(", ")}</strong> (${m.iGive.length}张)</div>
+        <div>📥 你得到: <strong>${m.iGet.join(", ")}</strong> (${m.iGet.length}张)</div>
+        <div style="margin-top:8px;font-size:12px;color:#888">
+          你的剩余限额: 送出${m.myRemaining.send} | 收到${m.myRemaining.recv} · 
+          对方剩余限额: 送出${m.hisRemaining.send} | 收到${m.hisRemaining.recv}
+        </div>
+      </div>
+      <div class="match-actions">
+        <button class="btn btn-success" onclick="executeAutoExchange('${m.user}', [${m.iGive}], [${m.iGet}])">✅ 执行交换</button>
+      </div>
+    </div>
+  `).join("");
+}
+
+// ==============================================
+// 执行交换
+// ==============================================
+async function executeAutoExchange(targetName, iGive, iGet) {
+  if (!confirm(`确认与 ${targetName} 交换？\n你给出: ${iGive.join(", ")}\n你得到: ${iGet.join(", ")}`)) {
+    return;
+  }
+  await executeExchange(targetName, iGive, iGet);
+  
+  // 交换成功后重新计算全局匹配（因为数据已变）
+  await calculateAllMatches();
+}
+
+async function executeExchange(targetName, iGive, iGet) {
+  const myName = myData.name;
+  if (!myName) return alert("请先保存你的数据");
+  if (!db) return alert("Firebase 未配置");
+  
+  const today = getToday();
+  
+  try {
+    // 使用事务确保数据一致性
+    const myRef = db.collection("puzzleUsers").doc(myName);
+    const targetRef = db.collection("puzzleUsers").doc(targetName);
+    
+    const [myDoc, targetDoc] = await Promise.all([
+      myRef.get(),
+      targetRef.get()
+    ]);
+    
+    if (!myDoc.exists) return alert("你的数据不存在");
+    if (!targetDoc.exists) return alert("对方数据不存在");
+    
+    let myNewData = myDoc.data();
+    let targetNewData = targetDoc.data();
+    
+    // 检查今日限额
+    if (!myNewData.dailyLimit || myNewData.dailyLimit.date !== today) {
+      myNewData.dailyLimit = { date: today, sent: 0, received: 0 };
+    }
+    if (!targetNewData.dailyLimit || targetNewData.dailyLimit.date !== today) {
+      targetNewData.dailyLimit = { date: today, sent: 0, received: 0 };
+    }
+    
+    // 检查限额
+    if (myNewData.dailyLimit.sent + iGive.length > CONFIG.DAILY_SEND_LIMIT) {
+      return alert("超出你今日的送出限额");
+    }
+    if (myNewData.dailyLimit.received + iGet.length > CONFIG.DAILY_RECV_LIMIT) {
+      return alert("超出你今日的收到限额");
+    }
+    if (targetNewData.dailyLimit.sent + iGet.length > CONFIG.DAILY_SEND_LIMIT) {
+      return alert("超出对方今日的送出限额");
+    }
+    if (targetNewData.dailyLimit.received + iGive.length > CONFIG.DAILY_RECV_LIMIT) {
+      return alert("超出对方今日的收到限额");
+    }
+    
+    // 检查拼图库存
+    for (const id of iGive) {
+      if ((myNewData.have[id] || 0) < 2) {
+        return alert(`你没有足够的拼图 #${id} 用于交换`);
+      }
+    }
+    for (const id of iGet) {
+      if ((targetNewData.have[id] || 0) < 2) {
+        return alert(`对方没有足够的拼图 #${id} 用于交换`);
+      }
+    }
+    
+    // 执行交换 - 更新我的数据
+    for (const id of iGive) {
+      myNewData.have[id]--;
+      if (myNewData.have[id] === 0) delete myNewData.have[id];
+      targetNewData.have[id] = (targetNewData.have[id] || 0) + 1;
+      // 从对方的want中移除
+      if (targetNewData.want) {
+        targetNewData.want = targetNewData.want.filter(w => w !== id);
+      }
+    }
+    for (const id of iGet) {
+      targetNewData.have[id]--;
+      if (targetNewData.have[id] === 0) delete targetNewData.have[id];
+      myNewData.have[id] = (myNewData.have[id] || 0) + 1;
+      // 从我的want中移除
+      if (myNewData.want) {
+        myNewData.want = myNewData.want.filter(w => w !== id);
+      }
+    }
+    
+    // 更新限额
+    myNewData.dailyLimit.sent += iGive.length;
+    myNewData.dailyLimit.received += iGet.length;
+    targetNewData.dailyLimit.sent += iGet.length;
+    targetNewData.dailyLimit.received += iGive.length;
+    
+    myNewData.updateTime = new Date().toISOString();
+    targetNewData.updateTime = new Date().toISOString();
+    
+    // 保存数据
+    await Promise.all([
+      myRef.set(myNewData),
+      targetRef.set(targetNewData)
+    ]);
+    
+    // 更新本地数据
+    myData = myNewData;
+    refreshDisplay();
+    updateLimitDisplay();
+    await fetchAllUsers();
+    
+    // 如果在匹配页面，刷新匹配结果
+    if (document.getElementById("tab-match").classList.contains("active")) {
+      autoMatch();
+    }
+    
+    alert("交换成功！");
+  } catch (e) {
+    alert("交换失败: " + e.message);
+    console.error(e);
+  }
+}
+
+// ==============================================
+// 手动交换
+// ==============================================
+function renderManualExchangeOptions() {
+  const name = document.getElementById("nickname").value.trim();
+  if (!name || !myData.name) return;
+  
+  // 渲染"我要送出"选项（我有>1张的）
+  const giveEl = document.getElementById("manualGive");
+  giveEl.innerHTML = "";
+  for (const [id, count] of Object.entries(myData.have || {})) {
+    if (count > 1) {
+      const div = document.createElement("div");
+      div.className = "select-item";
+      div.innerText = `#${id} (${count}张)`;
+      div.dataset.id = id;
+      div.onclick = () => toggleManualGive(div, Number(id));
+      giveEl.appendChild(div);
+    }
+  }
+  if (giveEl.innerHTML === "") {
+    giveEl.innerHTML = "<div style='color:#999;font-size:12px'>你没有多余的拼图可用于交换</div>";
+  }
+  
+  // 渲染"我要收到"选项（我在want列表中的）
+  const getEl = document.getElementById("manualGet");
+  getEl.innerHTML = "";
+  for (const id of myData.want || []) {
+    const div = document.createElement("div");
+    div.className = "select-item";
+    div.innerText = `#${id}`;
+    div.dataset.id = id;
+    div.onclick = () => toggleManualGet(div, id);
+    getEl.appendChild(div);
+  }
+  if (getEl.innerHTML === "") {
+    getEl.innerHTML = "<div style='color:#999;font-size:12px'>你没有标记缺少的拼图</div>";
+  }
+  
+  updateManualSummary();
+}
+
+function toggleManualGive(el, id) {
+  const idx = manualGiveSelected.indexOf(id);
+  if (idx === -1) {
+    manualGiveSelected.push(id);
+    el.classList.add("selected");
+  } else {
+    manualGiveSelected.splice(idx, 1);
+    el.classList.remove("selected");
+  }
+  updateManualSummary();
+}
+
+function toggleManualGet(el, id) {
+  const idx = manualGetSelected.indexOf(id);
+  if (idx === -1) {
+    manualGetSelected.push(id);
+    el.classList.add("selected");
+  } else {
+    manualGetSelected.splice(idx, 1);
+    el.classList.remove("selected");
+  }
+  updateManualSummary();
+}
+
+function updateManualSummary() {
+  const summary = document.getElementById("manualExchangeSummary");
+  if (manualGiveSelected.length === 0 && manualGetSelected.length === 0) {
+    summary.innerText = "请选择要交换的拼图";
+  } else {
+    summary.innerText = `送出: ${manualGiveSelected.length}张 (${manualGiveSelected.join(", ")}) | 收到: ${manualGetSelected.length}张 (${manualGetSelected.join(", ")})`;
+  }
+}
+
+async function executeManualExchange() {
+  const targetName = document.getElementById("targetUser").value.trim();
+  if (!targetName) return alert("请输入对方昵称");
+  if (manualGiveSelected.length === 0 || manualGetSelected.length === 0) {
+    return alert("请选择要交换的拼图");
+  }
+  if (manualGiveSelected.length !== manualGetSelected.length) {
+    return alert("送出的拼图数量和收到的拼图数量必须相同");
+  }
+  
+  await executeExchange(targetName, manualGiveSelected, manualGetSelected);
+  
+  // 清空选择
+  manualGiveSelected = [];
+  manualGetSelected = [];
+  renderManualExchangeOptions();
+  
+  // 交换成功后重新计算全局匹配（因为数据已变）
+  await calculateAllMatches();
+}
+
+// ==============================================
+// 成员列表
+// ==============================================
+function renderMembersList() {
+  const el = document.getElementById("membersList");
+  
+  if (allUsers.length === 0) {
+    el.innerHTML = `
+      <div class="empty-state">
+        <div class="empty-state-icon">👥</div>
+        <div>暂无成员数据</div>
+      </div>
+    `;
+    return;
+  }
+  
+  el.innerHTML = allUsers.map(u => {
+    const haveList = Object.entries(u.have || {})
+      .filter(([_, c]) => c > 1)
+      .map(([id, c]) => `${id}×${c}`);
+    const wantList = u.want || [];
+    
+    return `
+      <div class="user-card">
+        <div class="user-header">
+          <span class="user-name">👤 ${u.name}</span>
+          <span class="user-stats">多余: ${haveList.length}种 | 缺少: ${wantList.length}种</span>
+        </div>
+        <div style="font-size:12px;color:#666">
+          <div style="margin-bottom:4px">🟢 多余拼图:</div>
+          <div class="puzzle-tags">
+            ${haveList.length > 0 ? haveList.map(t => `<span class="tag tag-have">${t}</span>`).join("") : '<span style="color:#999">无</span>'}
+          </div>
+          <div style="margin:8px 0 4px">🔴 缺少拼图:</div>
+          <div class="puzzle-tags">
+            ${wantList.length > 0 ? wantList.map(t => `<span class="tag tag-want">${t}</span>`).join("") : '<span style="color:#999">无</span>'}
+          </div>
+        </div>
+      </div>
+    `;
+  }).join("");
+}
+
+// ==============================================
+// 标签页切换
+// ==============================================
+function switchTab(tabName) {
+  document.querySelectorAll(".tab").forEach(t => t.classList.remove("active"));
+  document.querySelectorAll(".tab-content").forEach(t => t.classList.remove("active"));
+  
+  event.target.classList.add("active");
+  document.getElementById(`tab-${tabName}`).classList.add("active");
+  
+  if (tabName === "members") {
+    fetchAllUsers();
+  } else if (tabName === "manual") {
+    renderManualExchangeOptions();
+  } else if (tabName === "match") {
+    if (myData.name) loadMyMatches();
+  } else if (tabName === "allmatches") {
+    calculateAllMatches();
+  }
+}
+
+// 初始化
+init();
+</script>
+</body>
+</html>
