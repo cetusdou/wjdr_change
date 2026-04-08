@@ -1,0 +1,184 @@
+{
+  "categories": [
+    {
+      "id": 1,
+      "name": "重燃火种",
+      "puzzles": [
+        {"name": "大熔炉", "pieces": 9},
+        {"name": "城镇的建立", "pieces": 9},
+        {"name": "曙光联盟", "pieces": 9},
+        {"name": "抉择", "pieces": 12},
+        {"name": "威胁", "pieces": 12},
+        {"name": "英雄", "pieces": 12},
+        {"name": "美食的力量", "pieces": 15},
+        {"name": "新秩序", "pieces": 15},
+        {"name": "探险家", "pieces": 15}
+      ]
+    },
+    {
+      "id": 2,
+      "name": "英雄之歌",
+      "puzzles": [
+        {"name": "英雄无畏", "pieces": 9},
+        {"name": "雪之少女", "pieces": 9},
+        {"name": "平民英雄", "pieces": 12},
+        {"name": "阿卡迪亚的遗产", "pieces": 12},
+        {"name": "我即是火焰", "pieces": 12},
+        {"name": "建筑的艺术", "pieces": 15},
+        {"name": "生死之间", "pieces": 15},
+        {"name": "破冰者", "pieces": 15},
+        {"name": "英雄的史诗", "pieces": 18}
+      ]
+    },
+    {
+      "id": 3,
+      "name": "探索世界",
+      "puzzles": [
+        {"name": "搏击风雪", "pieces": 9},
+        {"name": "旅行手记", "pieces": 12},
+        {"name": "猎人公会", "pieces": 12},
+        {"name": "变异巨熊", "pieces": 12},
+        {"name": "王国宝藏", "pieces": 15},
+        {"name": "知识即宝藏", "pieces": 15},
+        {"name": "遗迹探索", "pieces": 15},
+        {"name": "雪怪聚落", "pieces": 18},
+        {"name": "万古之扉", "pieces": 18}
+      ]
+    },
+    {
+      "id": 4,
+      "name": "晨曦海岛",
+      "puzzles": [
+        {"name": "晨曦岛传说", "pieces": 12},
+        {"name": "梦想之岛", "pieces": 12},
+        {"name": "生命之树", "pieces": 12},
+        {"name": "海洋的呼唤", "pieces": 15},
+        {"name": "遥远的共鸣", "pieces": 15},
+        {"name": "商队造访", "pieces": 15},
+        {"name": "新的家园", "pieces": 18},
+        {"name": "晨曦欢歌", "pieces": 18},
+        {"name": "海岛盛景", "pieces": 18}
+      ]
+    },
+    {
+      "id": 5,
+      "name": "冰原联盟",
+      "puzzles": [
+        {"name": "建立联盟", "pieces": 12},
+        {"name": "万众齐心", "pieces": 12},
+        {"name": "英雄的助力", "pieces": 15},
+        {"name": "联盟资源", "pieces": 15},
+        {"name": "扭曲的执念", "pieces": 15},
+        {"name": "理想与罪恶", "pieces": 18},
+        {"name": "新世界的孩子们", "pieces": 18},
+        {"name": "冲锋的号角", "pieces": 18},
+        {"name": "战火的史诗", "pieces": 18}
+      ]
+    },
+    {
+      "id": 6,
+      "name": "战火史诗",
+      "puzzles": [
+        {"name": "皇家兵工厂", "pieces": 12},
+        {"name": "战场王者", "pieces": 15},
+        {"name": "奥利哈钢", "pieces": 15},
+        {"name": "王者之城", "pieces": 15},
+        {"name": "飞行家的乐园", "pieces": 15},
+        {"name": "伟大的博弈", "pieces": 18},
+        {"name": "峡谷会战", "pieces": 18},
+        {"name": "英雄的荣耀", "pieces": 18},
+        {"name": "盛大的欢宴", "pieces": 18}
+      ]
+    },
+    {
+      "id": 7,
+      "name": "奇妙历险",
+      "puzzles": [
+        {"name": "钓鱼锦标赛", "pieces": 12},
+        {"name": "除雪小分队", "pieces": 15},
+        {"name": "掠夺者", "pieces": 15},
+        {"name": "红发的乔伊", "pieces": 15},
+        {"name": "\"女王\"崛起", "pieces": 15},
+        {"name": "猎隼兵团", "pieces": 18},
+        {"name": "赏金猎人", "pieces": 18},
+        {"name": "流浪商人", "pieces": 18},
+        {"name": "雪原大冒险", "pieces": 18}
+      ]
+    },
+    {
+      "id": 8,
+      "name": "神兵利器",
+      "puzzles": [
+        {"name": "锻造大师", "pieces": 12},
+        {"name": "传奇神兵", "pieces": 15},
+        {"name": "雪原商路", "pieces": 15},
+        {"name": "商旅护卫", "pieces": 15},
+        {"name": "雪怪侵袭", "pieces": 15},
+        {"name": "蒸汽狂想曲", "pieces": 18},
+        {"name": "破冰而行", "pieces": 18},
+        {"name": "专精能源石", "pieces": 18},
+        {"name": "奇异宝石", "pieces": 18}
+      ]
+    },
+    {
+      "id": 9,
+      "name": "地心探险",
+      "puzzles": [
+        {"name": "神秘裂谷", "pieces": 12},
+        {"name": "地下世界", "pieces": 15},
+        {"name": "矿洞历险", "pieces": 15},
+        {"name": "幻光蕈林", "pieces": 15},
+        {"name": "熔岩锻炉", "pieces": 15},
+        {"name": "地下住民", "pieces": 18},
+        {"name": "秘密计划", "pieces": 18},
+        {"name": "大地之心", "pieces": 18},
+        {"name": "深渊的回响", "pieces": 18}
+      ]
+    },
+    {
+      "id": 10,
+      "name": "自然之力",
+      "puzzles": [
+        {"name": "自然之友", "pieces": 12},
+        {"name": "水与木之灵", "pieces": 15},
+        {"name": "野性之力", "pieces": 15},
+        {"name": "野兽军团", "pieces": 15},
+        {"name": "宠物盟友", "pieces": 15},
+        {"name": "驯兽大师", "pieces": 18},
+        {"name": "奇异助力", "pieces": 18},
+        {"name": "喀莎的小烦恼", "pieces": 18},
+        {"name": "百兽之王", "pieces": 18}
+      ]
+    },
+    {
+      "id": 11,
+      "name": "火晶奥秘",
+      "puzzles": [
+        {"name": "火焰晶石", "pieces": 12},
+        {"name": "火晶矿", "pieces": 15},
+        {"name": "王国的血脉", "pieces": 15},
+        {"name": "盛极而衰", "pieces": 15},
+        {"name": "心火重燃", "pieces": 15},
+        {"name": "灼焰的军团", "pieces": 18},
+        {"name": "火晶研究", "pieces": 18},
+        {"name": "炽红狂暴", "pieces": 18},
+        {"name": "火晶时代", "pieces": 18}
+      ]
+    },
+    {
+      "id": 12,
+      "name": "霜风战曲",
+      "puzzles": [
+        {"name": "战火与荣勋", "pieces": 12},
+        {"name": "霜风雪道", "pieces": 15},
+        {"name": "遗忘者的低语", "pieces": 15},
+        {"name": "烈焰丰碑", "pieces": 15},
+        {"name": "联盟大作战", "pieces": 15},
+        {"name": "王国战争", "pieces": 18},
+        {"name": "巅峰对决", "pieces": 18},
+        {"name": "王城战火", "pieces": 18},
+        {"name": "寒霜律法", "pieces": 18}
+      ]
+    }
+  ]
+}
